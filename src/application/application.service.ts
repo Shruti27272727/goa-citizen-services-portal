@@ -45,10 +45,10 @@ export class ApplicationService {
       throw new NotFoundException(`Application with ID ${id} not found`);
     }
 
-    return this.findOne(id); // fetch updated application
+    return this.findOne(id); 
   }
 
-  // Delete an application
+
   async remove(id: number): Promise<void> {
     const result = await this.applicationRepo.delete(id);
     if (result.affected === 0) {

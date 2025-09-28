@@ -3,7 +3,7 @@ import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
 @Entity('aadhar')
 export class Aadhar {
   @PrimaryGeneratedColumn({ type: 'integer' })
-  citizen_id: number; // auto-increment
+  citizen_id: number; 
 
   @Column({ type: 'text' })
   aadhar_number: string;

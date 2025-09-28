@@ -2,7 +2,7 @@ import { Controller, Get, Post, Body, Param, Patch, Delete } from '@nestjs/commo
 import { AddressesService } from './addresses.service';
 import { Address } from './addresses.entity';
 
-@Controller('addresses') // ✅ this defines the route prefix
+@Controller('addresses') 
 export class AddressesController {
   constructor(private readonly addressesService: AddressesService) {}
 

@@ -6,7 +6,6 @@ export class Address {
   @PrimaryGeneratedColumn()
   id: number;
 
-  // Many addresses belong to one citizen
   @ManyToOne(() => Citizen, { onDelete: 'CASCADE' })
   citizen: Citizen;
 

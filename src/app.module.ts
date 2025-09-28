@@ -6,7 +6,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
-// Entities
+
 import { Citizen } from './citizen/citizen.entity';
 import { Aadhar } from './aadhar/aadhar.entity';
 import { Address } from './addresses/addresses.entity';
@@ -17,7 +17,6 @@ import { Application } from './application/application.entity';
 import { Document } from './documents/documents.entity'; 
 import { Payment } from './payments/payments.entity';
 
-// Modules
 import { CitizenModule } from './citizen/citizen.module';
 import { AadharModule } from './aadhar/aadhar.module';
 import { AddressesModule } from './addresses/addresses.module';
@@ -30,10 +29,10 @@ import { PaymentsModule } from './payments/payments.module';
 
 @Module({
   imports: [
-    // Global configuration
+   
     ConfigModule.forRoot({ isGlobal: true }),
 
-    // Database configuration
+   
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -59,7 +58,7 @@ import { PaymentsModule } from './payments/payments.module';
       }),
     }),
 
-    // Application modules
+    
     CitizenModule,
     AadharModule,
     AddressesModule,
@@ -68,7 +67,7 @@ import { PaymentsModule } from './payments/payments.module';
     ServicesModule,
     ApplicationModule,
     DocumentsModule,
-    PaymentsModule, // ✅ Already imported
+    PaymentsModule, 
   ],
   controllers: [AppController],
   providers: [AppService],

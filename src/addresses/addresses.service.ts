@@ -38,7 +38,7 @@ export class AddressesService {
     return this.addressRepository.save(address);
   }
 
-  // Delete address
+
   async remove(id: number): Promise<void> {
     const result = await this.addressRepository.delete(id);
     if (result.affected === 0) throw new NotFoundException('Address not found');

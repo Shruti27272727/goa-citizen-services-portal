@@ -10,7 +10,7 @@ import { ServicesModule } from '../services/services.module';
   imports: [
     TypeOrmModule.forFeature([Application]),
     CitizenModule,
-    ServicesModule, // Officer not required
+    ServicesModule, 
   ],
   providers: [ApplicationService],
   controllers: [ApplicationController],
