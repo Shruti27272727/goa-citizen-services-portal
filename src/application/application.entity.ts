@@ -15,19 +15,18 @@ export class Application {
   id: number;
 
   @ManyToOne(() => Citizen, (citizen) => citizen.applications)
-@JoinColumn({ name: 'citizenid' }) // matches DB
-citizen: Citizen;
+  @JoinColumn({ name: 'citizenid' }) // matches DB
+  citizen: Citizen;
 
-@ManyToOne(() => Service, (service) => service.applications)
-@JoinColumn({ name: 'serviceid' }) // matches DB
-service: Service;
+  @ManyToOne(() => Service, (service) => service.applications)
+  @JoinColumn({ name: 'serviceid' }) // matches DB
+  service: Service;
 
-@ManyToOne(() => Officer, (officer) => officer.applications, { nullable: true })
-@JoinColumn({ name: 'officerid' }) // matches DB
-officer?: Officer;
+  @ManyToOne(() => Officer, (officer) => officer.applications, { nullable: true })
+  @JoinColumn({ name: 'officerid' }) // matches DB
+  officer?: Officer;
 
-
-  @Column({ type: 'enum', enum: Status, default: Status.PENDING })
+  @Column({ type: 'enum', enum: Status }) // removed default
   status: Status;
 
   @Column({ type: 'text', array: true, default: '{}' })
