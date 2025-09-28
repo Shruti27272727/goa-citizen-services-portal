@@ -1,15 +1,19 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, OneToMany } from 'typeorm';
+import { Application } from '../application/application.entity';
 
 @Entity('citizens')
 export class Citizen {
   @PrimaryGeneratedColumn({ type: 'integer', name: 'id' })
   id: number;
 
-  @Column({ type: 'text', nullable: false })
+  @Column({ type: 'text', nullable: false, unique: true })
   email: string;
 
   @Column({ type: 'text', nullable: false })
   phone: string;
+
+  @OneToMany(() => Application, (application) => application.citizen)
+  applications: Application[];
 
   @CreateDateColumn({ type: 'timestamptz', name: 'created_at' })
   createdAt: Date;

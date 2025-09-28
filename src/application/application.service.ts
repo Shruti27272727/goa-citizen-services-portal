@@ -1,58 +1,73 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Application } from './application.entity';
+import { Application, Status } from './application.entity';
+import { Citizen } from '../citizen/citizen.entity';
+import { Service } from '../services/services.entity';
+import { Officer } from '../officers/officer.entity';
 
 @Injectable()
 export class ApplicationService {
   constructor(
     @InjectRepository(Application)
-    private readonly applicationRepo: Repository<Application>,
+    private readonly appRepo: Repository<Application>,
+    @InjectRepository(Citizen)
+    private readonly citizenRepo: Repository<Citizen>,
+    @InjectRepository(Service)
+    private readonly serviceRepo: Repository<Service>,
+    @InjectRepository(Officer)
+    private readonly officerRepo: Repository<Officer>,
   ) {}
 
-  // Get all applications with relations
-  findAll(): Promise<Application[]> {
-    return this.applicationRepo.find({
-      relations: ['citizen', 'service', 'officer'],
-    });
-  }
-
-  // Get a single application by ID
-  async findOne(id: number): Promise<Application> {
-    const app = await this.applicationRepo.findOne({
-      where: { id },
-      relations: ['citizen', 'service', 'officer'],
-    });
-
-    if (!app) {
-      throw new NotFoundException(`Application with ID ${id} not found`);
-    }
-
-    return app;
-  }
-
   // Create a new application
-  create(applicationData: Partial<Application>): Promise<Application> {
-    const newApp = this.applicationRepo.create(applicationData);
-    return this.applicationRepo.save(newApp);
-  }
+  async create(body: { citizenId: number; serviceId: number; remarks: string[] }): Promise<Application> {
+    const { citizenId, serviceId, remarks } = body;
 
-  // Update an existing application
-  async update(id: number, updateData: Partial<Application>): Promise<Application> {
-    const result = await this.applicationRepo.update(id, updateData);
+    const citizen = await this.citizenRepo.findOne({ where: { id: citizenId } });
+    const service = await this.serviceRepo.findOne({ where: { id: serviceId } });
 
-    if (result.affected === 0) {
-      throw new NotFoundException(`Application with ID ${id} not found`);
+    if (!citizen || !service) {
+      throw new NotFoundException('Citizen or Service not found');
     }
 
-    return this.findOne(id); 
+    const application = this.appRepo.create({
+      citizen,
+      service,
+      remarks,
+      status: Status.PENDING,
+    });
+
+    return this.appRepo.save(application);
   }
 
+  // Update status by officer
+  async updateStatus(appId: number, officerId: number, status: Status): Promise<Application> {
+    const application = await this.appRepo.findOne({ where: { id: appId } });
+    if (!application) throw new NotFoundException('Application not found');
 
-  async remove(id: number): Promise<void> {
-    const result = await this.applicationRepo.delete(id);
-    if (result.affected === 0) {
-      throw new NotFoundException(`Application with ID ${id} not found`);
-    }
+    const officer = await this.officerRepo.findOne({ where: { id: officerId } });
+    if (!officer) throw new NotFoundException('Officer not found');
+
+    application.status = status;
+    application.officer = officer;
+    application.completed_on = new Date();
+
+    return this.appRepo.save(application);
+  }
+
+  // Get applications by citizen
+  async getApplicationsByCitizen(citizenId: number): Promise<Application[]> {
+    return this.appRepo.find({
+      where: { citizen: { id: citizenId } },
+      relations: ['service', 'officer'],
+    });
+  }
+
+  // Get pending applications
+  async getPendingApplications(): Promise<Application[]> {
+    return this.appRepo.find({
+      where: { status: Status.PENDING },
+      relations: ['citizen', 'service'],
+    });
   }
 }

@@ -1,36 +1,35 @@
-import { Controller, Get, Post, Put, Delete, Param, Body, ParseIntPipe } from '@nestjs/common';
+import { Controller, Post, Body, Param, Patch, Get } from '@nestjs/common';
 import { ApplicationService } from './application.service';
-import { Application } from './application.entity';
+import { Status } from './application.entity';
 
 @Controller('applications')
 export class ApplicationController {
   constructor(private readonly appService: ApplicationService) {}
 
-  @Get()
-  getAll(): Promise<Application[]> {
-    return this.appService.findAll();
-  }
-
-  @Get(':id')
-  getOne(@Param('id', ParseIntPipe) id: number): Promise<Application> {
-    return this.appService.findOne(id);
-  }
-
+  // Citizen applies for a service
   @Post()
-  create(@Body() appData: Partial<Application>): Promise<Application> {
-    return this.appService.create(appData);
+  async create(@Body() body: { citizenId: number; serviceId: number; remarks: string[] }) {
+    return this.appService.create(body);
   }
 
-  @Put(':id')
-  update(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() updateData: Partial<Application>,
-  ): Promise<Application> {
-    return this.appService.update(id, updateData);
+  // Officer updates application status
+  @Patch(':id/status')
+  async updateStatus(
+    @Param('id') id: string,
+    @Body() body: { status: Status; officerId: number },
+  ) {
+    return this.appService.updateStatus(+id, body.officerId, body.status);
   }
 
-  @Delete(':id')
-  delete(@Param('id', ParseIntPipe) id: number): Promise<void> {
-    return this.appService.remove(id);
+  // Citizen views their own applications
+  @Get('citizen/:citizenId')
+  async getByCitizen(@Param('citizenId') citizenId: string) {
+    return this.appService.getApplicationsByCitizen(+citizenId);
+  }
+
+  // Officer views all pending applications
+  @Get('pending')
+  async getPending() {
+    return this.appService.getPendingApplications();
   }
 }

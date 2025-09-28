@@ -1,34 +1,41 @@
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 'typeorm';
+import { Citizen } from '../citizen/citizen.entity';
+import { Service } from '../services/services.entity';
+import { Officer } from '../officers/officer.entity';
 
 export enum Status {
   PENDING = 'PENDING',
-  IN_PROGRESS = 'IN_PROGRESS',
-  COMPLETED = 'COMPLETED',
+  APPROVED = 'APPROVED',
+  REJECTED = 'REJECTED',
 }
 
-@Entity()
+@Entity({ name: 'application' })
 export class Application {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
-  citizen_id: number;
+  @ManyToOne(() => Citizen, (citizen) => citizen.applications)
+@JoinColumn({ name: 'citizenid' }) // matches DB
+citizen: Citizen;
 
-  @Column()
-  service_id: number;
+@ManyToOne(() => Service, (service) => service.applications)
+@JoinColumn({ name: 'serviceid' }) // matches DB
+service: Service;
 
-  @Column({ nullable: true })
-  officer_id?: number;
+@ManyToOne(() => Officer, (officer) => officer.applications, { nullable: true })
+@JoinColumn({ name: 'officerid' }) // matches DB
+officer?: Officer;
 
-  @Column("enum", { enum: Status, array: true, default: [Status.PENDING] })
-  status: Status[];
 
-  @Column("timestamptz", { array: true })
-  applied_on: Date[];
+  @Column({ type: 'enum', enum: Status, default: Status.PENDING })
+  status: Status;
 
-  @Column("timestamptz", { nullable: true })
+  @Column({ type: 'text', array: true, default: '{}' })
+  remarks: string[];
+
+  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  applied_on: Date;
+
+  @Column({ type: 'timestamp', nullable: true })
   completed_on?: Date;
-
-  @Column("text", { array: true, nullable: true })
-  remarks?: string[];
 }

@@ -1,9 +1,10 @@
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
+import { Application } from '../application/application.entity';
 
 @Entity({ name: 'services' })
 export class Service {
-  @PrimaryGeneratedColumn({ name: 'id1' })  // ← this auto-generates ID
-  id: number;
+  @PrimaryGeneratedColumn()
+  id: number; // auto-generated primary key
 
   @Column({ name: 'department_id' })
   department_id: number;
@@ -11,9 +12,12 @@ export class Service {
   @Column()
   name: string;
 
-  @Column()
-  description: string;
+  @Column({ nullable: true })
+  description?: string;
 
-  @Column()
-  fee: string;
+  @Column({ type: 'decimal', precision: 10, scale: 2 })
+  fee: number;
+
+  @OneToMany(() => Application, (application) => application.service)
+  applications: Application[];
 }

@@ -21,12 +21,10 @@ export class AadharService {
     }
   }
 
-  
   async getAll(): Promise<Aadhar[]> {
     return this.aadharRepository.find();
   }
 
-  
   async getById(id: number): Promise<Aadhar> {
     const aadhar = await this.aadharRepository.findOneBy({ citizen_id: id });
     if (!aadhar) {
@@ -35,15 +33,14 @@ export class AadharService {
     return aadhar;
   }
 
-
   async update(id: number, data: Partial<Aadhar>): Promise<Aadhar> {
     const result = await this.aadharRepository.update(id, data);
     if (result.affected === 0) {
       throw new NotFoundException(`Aadhar with id ${id} not found`);
     }
-    return this.getById(id); 
+    return this.getById(id); // ✅ Make sure this line is inside update method
+  }
 
-  
   async remove(id: number): Promise<void> {
     const result = await this.aadharRepository.delete(id);
     if (result.affected === 0) {

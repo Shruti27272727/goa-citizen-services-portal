@@ -1,13 +1,18 @@
-// src/services/services.module.ts
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Service } from './services.entity';
 import { ServicesService } from './services.service';
-import { ServicesController } from './services.controller';
+import { ApplicationModule } from '../application/application.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Service])],
+  imports: [
+    TypeOrmModule.forFeature([Service]),
+    forwardRef(() => ApplicationModule),
+  ],
   providers: [ServicesService],
-  controllers: [ServicesController],
+  exports: [
+    ServicesService,
+    TypeOrmModule, // ✅ export TypeOrmModule so repositories are available
+  ],
 })
 export class ServicesModule {}
