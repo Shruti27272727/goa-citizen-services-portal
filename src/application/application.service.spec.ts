@@ -10,19 +10,19 @@ export class ApplicationService {
     private readonly appRepo: Repository<Application>,
   ) {}
 
-  // Get all applications
+  
   findAll() {
     return this.appRepo.find();
   }
 
-  // Get application by ID
+  
   async findOne(id: number) {
     const app = await this.appRepo.findOne({ where: { id } });
     if (!app) throw new NotFoundException(`Application with ID ${id} not found`);
     return app;
   }
 
-  // Citizen applies → status = PENDING
+ 
   async create(
   applicationData: Partial<Application> & { citizenId?: number; serviceId?: number },
 ): Promise<Application> {

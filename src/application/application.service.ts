@@ -19,7 +19,7 @@ export class ApplicationService {
     private readonly officerRepo: Repository<Officer>,
   ) {}
 
-  // Create a new application
+  
   async create(body: { citizenId: number; serviceId: number; remarks: string[] }): Promise<Application> {
     const { citizenId, serviceId, remarks } = body;
 
@@ -40,7 +40,6 @@ export class ApplicationService {
     return this.appRepo.save(application);
   }
 
-  // Update status by officer
   async updateStatus(appId: number, officerId: number, status: Status): Promise<Application> {
     const application = await this.appRepo.findOne({ where: { id: appId } });
     if (!application) throw new NotFoundException('Application not found');
@@ -55,7 +54,7 @@ export class ApplicationService {
     return this.appRepo.save(application);
   }
 
-  // Get applications by citizen
+ 
   async getApplicationsByCitizen(citizenId: number): Promise<Application[]> {
     return this.appRepo.find({
       where: { citizen: { id: citizenId } },
@@ -63,7 +62,7 @@ export class ApplicationService {
     });
   }
 
-  // Get pending applications
+  
   async getPendingApplications(): Promise<Application[]> {
     return this.appRepo.find({
       where: { status: Status.PENDING },

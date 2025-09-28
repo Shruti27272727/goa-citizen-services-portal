@@ -6,7 +6,7 @@ import { Status } from './application.entity';
 export class ApplicationController {
   constructor(private readonly appService: ApplicationService) {}
 
-  // Citizen applies for a service
+  
   @Post()
   async create(@Body() body: { citizenId: number; serviceId: number; remarks: string[] }) {
     return this.appService.create(body);
@@ -21,13 +21,13 @@ export class ApplicationController {
     return this.appService.updateStatus(+id, body.officerId, body.status);
   }
 
-  // Citizen views their own applications
+  
   @Get('citizen/:citizenId')
   async getByCitizen(@Param('citizenId') citizenId: string) {
     return this.appService.getApplicationsByCitizen(+citizenId);
   }
 
-  // Officer views all pending applications
+ 
   @Get('pending')
   async getPending() {
     return this.appService.getPendingApplications();

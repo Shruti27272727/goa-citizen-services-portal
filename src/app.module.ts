@@ -56,8 +56,8 @@ import { OfficerModule } from './officers/officer.module';
           Payment,
           Officer,
         ],
-        logging: ['error', 'warn', 'query'], // ✅ detailed logging
-        synchronize: false,migrationsRun: true, // ⚠️ set false in production
+        logging: ['error', 'warn', 'query'], 
+        synchronize: false,migrationsRun: true, 
       }),
     }),
 

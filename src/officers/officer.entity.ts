@@ -1,7 +1,7 @@
 import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
 import { Application } from '../application/application.entity';
 
-@Entity({ name: 'officer' })  // matches PostgreSQL table
+@Entity({ name: 'officer' }) 
 export class Officer {
   @PrimaryGeneratedColumn()
   id: number;

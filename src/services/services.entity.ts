@@ -4,7 +4,7 @@ import { Application } from '../application/application.entity';
 @Entity({ name: 'services' })
 export class Service {
   @PrimaryGeneratedColumn()
-  id: number; // auto-generated primary key
+  id: number; 
 
   @Column({ name: 'department_id' })
   department_id: number;
