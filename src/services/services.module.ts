@@ -12,7 +12,7 @@ import { ApplicationModule } from '../application/application.module';
   providers: [ServicesService],
   exports: [
     ServicesService,
-    TypeOrmModule, // ✅ export TypeOrmModule so repositories are available
+    TypeOrmModule, 
   ],
 })
 export class ServicesModule {}

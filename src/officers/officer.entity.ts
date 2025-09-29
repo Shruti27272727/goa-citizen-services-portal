@@ -6,14 +6,15 @@ export class Officer {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
-  name: string;
+@Column({ type: 'varchar', nullable: false, default: 'Unknown Officer' })
+name: string;
 
-  @Column({ unique: true })
-  email: string;
+  @Column({ type: 'varchar', nullable: false, default: 'unknown@example.com' })
+email: string;
 
-  @Column()
-  password: string;
+@Column({ type: 'varchar', nullable: true })
+password: string;
+
 
   @Column({ nullable: true })
   department_id?: number;

@@ -8,16 +8,16 @@ export class ServicesService {
   constructor(
     @InjectRepository(Service)
     private readonly serviceRepo: Repository<Service>,
-    private readonly dataSource: DataSource, // for raw queries
+    private readonly dataSource: DataSource, 
   ) {}
 
-  // Create a service with validation of department_id
+  
   async create(data: Partial<Service>): Promise<Service> {
     if (!data.department_id) {
       throw new BadRequestException('department_id is required');
     }
 
-    // Check if department exists in the database
+    
     const departmentExists = await this.dataSource.query(
       `SELECT id FROM departments WHERE id = $1`,
       [data.department_id],

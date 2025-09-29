@@ -12,7 +12,7 @@ export class ApplicationController {
     return this.appService.create(body);
   }
 
-  // Officer updates application status
+  
   @Patch(':id/status')
   async updateStatus(
     @Param('id') id: string,

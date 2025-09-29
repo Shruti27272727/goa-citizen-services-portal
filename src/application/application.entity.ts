@@ -1,7 +1,8 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, OneToMany, JoinColumn } from 'typeorm';
 import { Citizen } from '../citizen/citizen.entity';
 import { Service } from '../services/services.entity';
 import { Officer } from '../officers/officer.entity';
+import { Payment } from '../payments/payments.entity';
 
 export enum Status {
   PENDING = 'PENDING',
@@ -37,4 +38,8 @@ export class Application {
 
   @Column({ type: 'timestamp', nullable: true })
   completed_on?: Date;
+
+  
+  @OneToMany(() => Payment, (payment) => payment.application)
+  payments: Payment[];
 }

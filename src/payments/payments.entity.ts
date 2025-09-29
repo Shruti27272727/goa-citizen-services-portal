@@ -1,16 +1,41 @@
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+  ManyToOne,
+  JoinColumn,
+} from 'typeorm';
+import { Application } from '../application/application.entity';
 
-@Entity('payments')
+export enum PaymentStatus {
+  PENDING = 'Pending',
+  COMPLETED = 'Completed',
+  FAILED = 'Failed',
+}
+
+@Entity({ name: 'payments' })
 export class Payment {
-  @PrimaryGeneratedColumn({ name: 'application_id' })
-  applicationId: number;
+  @PrimaryGeneratedColumn()
+  id: number;
 
-  @PrimaryGeneratedColumn({ name: 'transaction_id' })
-  transactionId: number;
+  @Column({ name: 'razorpay_order_id' })
+  razorpayOrderId: string;
 
-  @Column({ type: 'text', nullable: true })
-  status: string;
+  @Column('int')
+  amount: number;
 
-  @Column({ type: 'text', nullable: true })
-  amount: string;
+  @Column({ type: 'enum', enum: PaymentStatus, default: PaymentStatus.PENDING })
+  status: PaymentStatus;
+
+  @ManyToOne(() => Application, (application) => application.payments)
+  @JoinColumn({ name: 'application_id' }) 
+  application: Application;
+
+  @CreateDateColumn({ name: 'created_at' })
+  createdAt: Date;
+
+  @UpdateDateColumn({ name: 'updated_at' })
+  updatedAt: Date;
 }
