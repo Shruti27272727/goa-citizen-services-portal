@@ -2,11 +2,10 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DocumentsService } from './documents.service';
 import { DocumentsController } from './documents.controller';
-import { Document } from './documents.entity';
-import { Application } from '../application/application.entity'; // ✅ Correct path
+import { DocumentEntity } from './documents.entity';  
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Document, Application])],
+  imports: [TypeOrmModule.forFeature([DocumentEntity])],
   providers: [DocumentsService],
   controllers: [DocumentsController],
 })

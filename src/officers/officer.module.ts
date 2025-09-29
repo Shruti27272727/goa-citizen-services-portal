@@ -10,7 +10,7 @@ import { OfficerController } from './officer.controller';
   controllers: [OfficerController],
   exports: [
     OfficerService,
-    TypeOrmModule, // ✅ export TypeOrmModule so OfficerRepository is available
+    TypeOrmModule, 
   ],
 })
 export class OfficerModule {}

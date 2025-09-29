@@ -3,6 +3,7 @@ import { Citizen } from '../citizen/citizen.entity';
 import { Service } from '../services/services.entity';
 import { Officer } from '../officers/officer.entity';
 import { Payment } from '../payments/payments.entity';
+import { DocumentEntity } from '../documents/documents.entity'; 
 
 export enum Status {
   PENDING = 'PENDING',
@@ -24,7 +25,7 @@ export class Application {
   service: Service;
 
   @ManyToOne(() => Officer, (officer) => officer.applications, { nullable: true })
-  @JoinColumn({ name: 'officerid' }) 
+  @JoinColumn({ name: 'officerid' })
   officer?: Officer;
 
   @Column({ type: 'enum', enum: Status, default: Status.PENDING })
@@ -39,7 +40,9 @@ export class Application {
   @Column({ type: 'timestamp', nullable: true })
   completed_on?: Date;
 
-  
   @OneToMany(() => Payment, (payment) => payment.application)
   payments: Payment[];
+
+  @OneToMany(() => DocumentEntity, (document) => document.application) 
+  documents: DocumentEntity[];
 }

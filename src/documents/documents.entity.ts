@@ -2,17 +2,21 @@ import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 't
 import { Application } from '../application/application.entity';
 
 @Entity('documents')
-export class Document {
-  @PrimaryGeneratedColumn({ name: 'application_id' })
+export class DocumentEntity {   
+  @PrimaryGeneratedColumn()
+  id: number;
+
+  @Column("text", { array: true })
+  file_url: string[];           
+
+  @Column("text", { array: true })
+  doc_type: string[];
+
+  @Column({ name: 'application_id' })
   applicationId: number;
 
-  @Column("text", { name: 'file_url', array: true, nullable: true }) // ✅ mapped
-  fileUrl: string[];
+  @ManyToOne(() => Application, (application) => application.documents, { onDelete: 'CASCADE' })
+@JoinColumn({ name: 'application_id' })
+application: Application;
 
-  @Column("text", { name: 'doc_type', array: true, nullable: true }) // ✅ mapped
-  docType: string[];
-
-  @ManyToOne(() => Application, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'application_id' })
-  application: Application;
 }

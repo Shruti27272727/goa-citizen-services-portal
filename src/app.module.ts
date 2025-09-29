@@ -1,11 +1,9 @@
-
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-
 
 import { Citizen } from './citizen/citizen.entity';
 import { Aadhar } from './aadhar/aadhar.entity';
@@ -14,10 +12,10 @@ import { Role } from './roles/roles.entity';
 import { Department } from './department/department.entity';
 import { Service } from './services/services.entity';
 import { Application } from './application/application.entity';
-import { Document } from './documents/documents.entity';
+import { DocumentEntity } from './documents/documents.entity'; 
+
 import { Payment } from './payments/payments.entity';
 import { Officer } from './officers/officer.entity';
-
 
 import { CitizenModule } from './citizen/citizen.module';
 import { AadharModule } from './aadhar/aadhar.module';
@@ -52,16 +50,16 @@ import { OfficerModule } from './officers/officer.module';
           Department,
           Service,
           Application,
-          Document,
+          DocumentEntity, 
           Payment,
           Officer,
         ],
-        logging: ['error', 'warn', 'query'], 
-        synchronize:false,migrationsRun: true, 
+        logging: ['error', 'warn', 'query'],
+        synchronize: false,
+        migrationsRun: true,
       }),
     }),
 
-    
     CitizenModule,
     AadharModule,
     AddressesModule,
