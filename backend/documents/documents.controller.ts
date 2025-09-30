@@ -1,13 +1,13 @@
 import { Controller, Get, Post, Put, Delete, Param, Body, NotFoundException } from '@nestjs/common';
 import { DocumentsService } from './documents.service';
-import { DocumentEntity } from './documents.entity';
+import { Document } from './documents.entity';
 
 @Controller('documents')
 export class DocumentsController {
   constructor(private readonly documentsService: DocumentsService) {}
 
   @Post()
-  create(@Body() document: Partial<DocumentEntity>) {
+  create(@Body() document: Partial<Document>) {
     return this.documentsService.create(document);
   }
 
@@ -24,7 +24,7 @@ export class DocumentsController {
   @Put(':id')
   async updateById(
     @Param('id') id: number,
-    @Body() updateData: Partial<DocumentEntity>,
+    @Body() updateData: Partial<Document>,
   ) {
     const updated = await this.documentsService.updateById(id, updateData);
     if (!updated) {

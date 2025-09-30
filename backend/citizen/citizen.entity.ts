@@ -12,6 +12,9 @@ export class Citizen {
   @Column({ type: 'text', nullable: false })
   phone: string;
 
+  @Column({ type: 'text', nullable: false }) 
+  password: string;
+
   @OneToMany(() => Application, (application) => application.citizen)
   applications: Application[];
 

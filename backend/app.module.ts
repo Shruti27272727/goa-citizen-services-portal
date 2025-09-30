@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { JwtModule } from '@nestjs/jwt';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -12,8 +13,7 @@ import { Role } from './roles/roles.entity';
 import { Department } from './department/department.entity';
 import { Service } from './services/services.entity';
 import { Application } from './application/application.entity';
-import { DocumentEntity } from './documents/documents.entity'; 
-
+import { Document } from './documents/documents.entity';
 import { Payment } from './payments/payments.entity';
 import { Officer } from './officers/officer.entity';
 
@@ -27,11 +27,13 @@ import { ApplicationModule } from './application/application.module';
 import { DocumentsModule } from './documents/documents.module';
 import { PaymentsModule } from './payments/payments.module';
 import { OfficerModule } from './officers/officer.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
 
+    
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -50,16 +52,27 @@ import { OfficerModule } from './officers/officer.module';
           Department,
           Service,
           Application,
-          DocumentEntity, 
+          Document,
           Payment,
           Officer,
         ],
         logging: ['error', 'warn', 'query'],
-        synchronize: false,
+        synchronize: false, 
         migrationsRun: true,
       }),
     }),
 
+   
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        secret: configService.get<string>('JWT_SECRET') || 'default_secret',
+        signOptions: { expiresIn: '1h' },
+      }),
+    }),
+
+   
     CitizenModule,
     AadharModule,
     AddressesModule,
@@ -70,6 +83,7 @@ import { OfficerModule } from './officers/officer.module';
     DocumentsModule,
     PaymentsModule,
     OfficerModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
