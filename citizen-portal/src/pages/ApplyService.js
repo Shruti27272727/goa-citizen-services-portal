@@ -1,30 +1,31 @@
 import React, { useState, useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
 import axios from "axios";
+import RazorpayButton from "../components/RazorpayButton";
 
 const ApplyService = () => {
   const { user } = useContext(AuthContext);
   const [serviceId, setServiceId] = useState("");
-  const [file, setFile] = useState(null);
+  const [files, setFiles] = useState([]);
   const [remarks, setRemarks] = useState("");
+  const [order, setOrder] = useState(null); // store Razorpay order
 
+  // Example services (replace with dynamic fetch if needed)
   const services = [
-    { id: 1, name: "Birth Certificate" },
-    { id: 2, name: "Aadhaar Service" },
-    { id: 3, name: "Residence Certificate" },
+    { id: 1, name: "Birth Certificate", fee: 10000 },
+    { id: 2, name: "Aadhaar Service", fee: 5000 },
+    { id: 3, name: "Residence Certificate", fee: 20000 },
   ];
 
   const handleFileChange = (e) => {
-    const selectedFile = e.target.files[0];
-    if (!selectedFile) return;
-    setFile(selectedFile);
+    setFiles(Array.from(e.target.files));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!serviceId || !file) {
-      alert("Please select a service and upload a file");
+    if (!serviceId || files.length === 0) {
+      alert("Please select a service and upload at least one file.");
       return;
     }
 
@@ -34,23 +35,30 @@ const ApplyService = () => {
     }
 
     try {
+      // Prepare form data
       const formData = new FormData();
-      formData.append("citizenId", 1); 
+      formData.append("citizenId", user.id);
       formData.append("serviceId", Number(serviceId));
       formData.append("remarks", JSON.stringify([remarks]));
-      formData.append("documents", file);
+      files.forEach((file) => formData.append("documents", file));
 
+      // Backend endpoint returns both application + payment info
       const res = await axios.post(
         "http://localhost:5000/applications/apply",
         formData,
-        {
-          headers: { "Content-Type": "multipart/form-data" },
-        }
+        { headers: { "Content-Type": "multipart/form-data" } }
       );
 
-      alert(res.data.message || "Application submitted successfully!");
+      const paymentOrder = res.data?.payment?.order;
+      if (!paymentOrder) throw new Error("Payment order not returned from backend.");
+
+      setOrder(paymentOrder);
+
+      alert("Application submitted successfully! Please complete the payment.");
+
+      // Reset form
       setServiceId("");
-      setFile(null);
+      setFiles([]);
       setRemarks("");
     } catch (err) {
       console.error(err);
@@ -59,7 +67,7 @@ const ApplyService = () => {
   };
 
   return (
-    <div style={{ maxWidth: "400px", margin: "auto" }}>
+    <div style={{ maxWidth: "500px", margin: "auto" }}>
       <h1>Apply for a Service</h1>
       <form onSubmit={handleSubmit}>
         <label>
@@ -72,7 +80,7 @@ const ApplyService = () => {
             <option value="">--Select a service--</option>
             {services.map((s) => (
               <option key={s.id} value={s.id}>
-                {s.name}
+                {s.name} (₹{s.fee / 100})
               </option>
             ))}
           </select>
@@ -88,14 +96,29 @@ const ApplyService = () => {
         </label>
         <br />
         <label>
-          Upload Document:
-          <input type="file" onChange={handleFileChange} required />
+          Upload Document(s):
+          <input type="file" multiple onChange={handleFileChange} required />
         </label>
         <br />
         <button type="submit" style={{ marginTop: "10px" }}>
           Apply
         </button>
       </form>
+
+      {/* Show RazorpayButton only if payment order exists */}
+      {order?.id && (
+        <div style={{ marginTop: "20px" }}>
+          <h3>Complete your Payment</h3>
+          <RazorpayButton
+            order={order}
+            user={user}
+            onPaymentSuccess={() => {
+              alert("Payment successful!");
+              setOrder(null);
+            }}
+          />
+        </div>
+      )}
     </div>
   );
 };

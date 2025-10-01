@@ -3,17 +3,17 @@ import axios from "axios";
 import { AuthContext } from "../context/AuthContext";
 
 const OfficerDashboard = () => {
-  const { user } = useContext(AuthContext); 
+  const { user } = useContext(AuthContext);
   const [applications, setApplications] = useState([]);
-  const [remark, setRemark] = useState("");
+  const [remarks, setRemarks] = useState({}); // store remarks per application
 
-  
   useEffect(() => {
     const fetchApplications = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/officer/pending-applications", {
-          headers: { Authorization: `Bearer ${user.token}` },
-        });
+        const res = await axios.get(
+          "http://localhost:5000/officer/pending-applications",
+          { headers: { Authorization: `Bearer ${user.token}` } }
+        );
         setApplications(res.data);
       } catch (err) {
         console.error(err);
@@ -24,19 +24,22 @@ const OfficerDashboard = () => {
     fetchApplications();
   }, [user.token]);
 
-  
   const handleAction = async (id, action) => {
     try {
       await axios.post(
         `http://localhost:5000/officer/application/${id}/${action}`,
-        { remark },
+        { remark: remarks[id] || "" },
         { headers: { Authorization: `Bearer ${user.token}` } }
       );
 
       alert(`Application ${action}ed successfully!`);
-      
       setApplications(applications.filter((app) => app.id !== id));
-      setRemark("");
+
+      setRemarks((prev) => {
+        const copy = { ...prev };
+        delete copy[id];
+        return copy;
+      });
     } catch (err) {
       console.error(err);
       alert("Action failed: " + (err.response?.data?.message || err.message));
@@ -58,8 +61,10 @@ const OfficerDashboard = () => {
                 Remark:
                 <input
                   type="text"
-                  value={remark}
-                  onChange={(e) => setRemark(e.target.value)}
+                  value={remarks[app.id] || ""}
+                  onChange={(e) =>
+                    setRemarks((prev) => ({ ...prev, [app.id]: e.target.value }))
+                  }
                 />
               </label>
               <button onClick={() => handleAction(app.id, "approve")}>Approve</button>

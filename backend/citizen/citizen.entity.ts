@@ -14,6 +14,8 @@ export class Citizen {
 
   @Column({ type: 'text', nullable: false }) 
   password: string;
+   @Column({ type: 'varchar', default: 'citizen' })  // <-- Add role column
+  role: 'citizen' | 'admin';
 
   @OneToMany(() => Application, (application) => application.citizen)
   applications: Application[];

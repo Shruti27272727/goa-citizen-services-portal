@@ -1,78 +1,86 @@
-
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Application, Status } from './application.entity';
+import { Application, ApplicationStatus } from './application.entity';
 import { Citizen } from '../citizen/citizen.entity';
 import { Service } from '../services/services.entity';
 import { Document } from '../documents/documents.entity';
+import { PaymentsService } from '../payments/payments.service';
 
 @Injectable()
 export class ApplicationService {
   constructor(
     @InjectRepository(Application)
-    private readonly applicationRepository: Repository<Application>,
+    private applicationRepo: Repository<Application>,
 
     @InjectRepository(Citizen)
-    private readonly citizenRepository: Repository<Citizen>,
+    private citizenRepo: Repository<Citizen>,
 
     @InjectRepository(Service)
-    private readonly serviceRepository: Repository<Service>,
+    private serviceRepo: Repository<Service>,
 
     @InjectRepository(Document)
-    private readonly documentRepository: Repository<Document>,
+    private documentRepo: Repository<Document>,
+
+    private paymentsService: PaymentsService,
   ) {}
 
   async createWithDocument(
     citizenId: number,
     serviceId: number,
-    remarks: string[] = [],
-    documentFiles?: Express.Multer.File[],
+    remarks: string[],
+    files: Express.Multer.File[],
   ) {
-  
-    const citizen = await this.citizenRepository.findOne({ where: { id: citizenId } });
-    if (!citizen) throw new NotFoundException('Citizen not found');
+    const citizen = await this.citizenRepo.findOne({ where: { id: citizenId } });
+    if (!citizen) throw new NotFoundException(`Citizen not found`);
 
-  
-    const service = await this.serviceRepository.findOne({ where: { id: serviceId } });
-    if (!service) throw new NotFoundException('Service not found');
+    const service = await this.serviceRepo.findOne({ where: { id: serviceId } });
+    if (!service) throw new NotFoundException(`Service not found`);
 
-    
-    const application = this.applicationRepository.create({
+    const application = this.applicationRepo.create({
+      status: ApplicationStatus.PENDING,
+      remarks,
       citizen,
       service,
-      status: Status.PENDING,
-      remarks,
     });
 
-    const savedApplication = await this.applicationRepository.save(application);
+    const savedApp = await this.applicationRepo.save(application);
 
-    if (documentFiles && documentFiles.length > 0) {
-      const documents = documentFiles.map(file =>
-        this.documentRepository.create({
+    if (files?.length) {
+      for (const file of files) {
+        const doc = this.documentRepo.create({
           fileName: file.originalname,
           filePath: file.path || '',
-          application: savedApplication,
-        }),
-      );
-      await this.documentRepository.save(documents);
+          application: savedApp,
+        });
+        await this.documentRepo.save(doc);
+      }
     }
 
-    return savedApplication;
+    const amount = service.fee || 1000;
+    const payment = await this.paymentsService.createPayment(savedApp.id, amount);
+
+    return {
+      application: savedApp,
+      payment: {
+        id: payment.id,
+        order: {
+          id: payment.razorpayOrderId,
+          amount: payment.amount,
+          currency: 'INR',
+        },
+      },
+    };
   }
 
- 
+  // ✅ This was missing
   async getApplicationsByCitizen(citizenId: number) {
     if (!citizenId) throw new BadRequestException('Citizen ID is required');
 
-    const citizen = await this.citizenRepository.findOne({ where: { id: citizenId } });
-    if (!citizen) throw new NotFoundException('Citizen not found');
-
-  
-    return this.applicationRepository.find({
+    return this.applicationRepo.find({
       where: { citizen: { id: citizenId } },
       relations: ['service', 'documents'],
-      order: { applied_on: 'DESC' }, 
+      order: { appliedOn: 'DESC' },
     });
   }
-}
+} // <-- Make sure this closing bracket exists

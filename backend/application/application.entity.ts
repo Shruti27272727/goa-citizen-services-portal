@@ -1,26 +1,51 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, OneToMany, JoinColumn } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  ManyToOne,
+  OneToMany,
+  JoinColumn,
+  CreateDateColumn,
+} from 'typeorm';
 import { Citizen } from '../citizen/citizen.entity';
 import { Service } from '../services/services.entity';
 import { Officer } from '../officers/officer.entity';
-import { Payment } from '../payments/payments.entity';
 import { Document } from '../documents/documents.entity';
+import { Payment } from '../payments/payments.entity';
 
-export enum Status {
+export enum ApplicationStatus {
   PENDING = 'PENDING',
   APPROVED = 'APPROVED',
   REJECTED = 'REJECTED',
 }
 
-@Entity({ name: 'application' })
+@Entity({ name: 'applications' })
 export class Application {
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn({ name: 'id' })
   id: number;
 
-  @ManyToOne(() => Citizen, (citizen) => citizen.applications)
+  @Column({ 
+    name: 'status',
+    type: 'varchar', 
+    length: 10, 
+    default: ApplicationStatus.PENDING 
+  })
+  status: ApplicationStatus;
+
+  @Column('text', { name: 'remarks', array: true, nullable: true, default: () => "'{}'" })
+  remarks: string[];
+
+  @CreateDateColumn({ name: 'applied_on', type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  appliedOn: Date;
+
+  @Column({ name: 'completed_on', type: 'timestamp', nullable: true })
+  completedOn?: Date;
+
+  @ManyToOne(() => Citizen, (citizen) => citizen.applications, { nullable: false })
   @JoinColumn({ name: 'citizen_id' })
   citizen: Citizen;
 
-  @ManyToOne(() => Service, (service) => service.applications)
+  @ManyToOne(() => Service, (service) => service.applications, { nullable: false })
   @JoinColumn({ name: 'service_id' })
   service: Service;
 
@@ -28,22 +53,9 @@ export class Application {
   @JoinColumn({ name: 'officer_id' })
   officer?: Officer;
 
-  @Column({ type: 'character varying', length: 20, default: Status.PENDING })
-  status: Status;
-
-  
-  @Column({ type: 'text', array: true, nullable: true })
-  remarks: string[];
-@Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
-applied_on: Date;
-
-
-  @Column({ type: 'timestamp', nullable: true })
-  completed_on?: Date;
-
-  @OneToMany(() => Payment, (payment) => payment.application)
-  payments: Payment[];
-
-  @OneToMany(() => Document, (document) => document.application)
+  @OneToMany(() => Document, (document) => document.application, { cascade: true })
   documents: Document[];
+
+  @OneToMany(() => Payment, (payment) => payment.application, { cascade: true })
+  payments: Payment[];
 }

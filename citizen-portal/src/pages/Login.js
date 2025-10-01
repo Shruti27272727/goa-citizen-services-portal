@@ -14,17 +14,19 @@ const Login = () => {
 
   const handleLogin = async () => {
     try {
-      
+      // Call backend login
       const res = await axios.post("/auth/login", { email, password });
       const userData = res.data;
 
-      
+      // Save user in AuthContext
       login(userData);
 
+      // Persist JWT token in localStorage
       localStorage.setItem("token", userData.token);
 
       alert("Login successful!");
 
+      // Redirect based on role
       const role = userData.role || "citizen";
       if (role === "citizen") navigate("/apply-service");
       else if (role === "officer") navigate("/officer-dashboard");
