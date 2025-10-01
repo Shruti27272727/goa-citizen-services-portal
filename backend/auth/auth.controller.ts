@@ -29,13 +29,12 @@ export class AuthController {
       throw new BadRequestException('Email, phone or Aadhaar, and password are required');
     }
 
-    // Use phone if provided, otherwise fallback to Aadhaar
-    const contact = phone ?? aadhaar!; // non-null because of validation
+    const contact = phone ?? aadhaar!; 
 
     return this.authService.register(email, contact, password);
   }
 
-  // Login endpoint
+  
   @Post('login')
   async login(@Body() body: LoginDto) {
     console.log('Received login body:', body);

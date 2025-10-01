@@ -7,7 +7,7 @@ export class ApplicationController {
   constructor(private readonly appService: ApplicationService) {}
 
   @Post('apply')
-  @UseInterceptors(FilesInterceptor('documents')) // matches formData key
+  @UseInterceptors(FilesInterceptor('documents')) 
   async apply(
     @Body('citizenId') citizenId: number,
     @Body('serviceId') serviceId: number,

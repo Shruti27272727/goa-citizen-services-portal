@@ -5,7 +5,7 @@ import { AuthContext } from "../context/AuthContext";
 const OfficerDashboard = () => {
   const { user } = useContext(AuthContext);
   const [applications, setApplications] = useState([]);
-  const [remarks, setRemarks] = useState({}); // store remarks per application
+  const [remarks, setRemarks] = useState({}); 
 
   useEffect(() => {
     const fetchApplications = async () => {

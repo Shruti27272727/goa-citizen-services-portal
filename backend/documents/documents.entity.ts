@@ -14,7 +14,7 @@ export class Document {
 
   @ManyToOne(() => Application, (application) => application.documents, {
     nullable: false,
-    onDelete: 'CASCADE', // Ensures documents are deleted when application is deleted
+    onDelete: 'CASCADE', 
   })
   @JoinColumn({ name: 'application_id' })
   application: Application;

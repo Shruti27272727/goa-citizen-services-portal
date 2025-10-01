@@ -73,7 +73,7 @@ export class ApplicationService {
     };
   }
 
-  // ✅ This was missing
+ 
   async getApplicationsByCitizen(citizenId: number) {
     if (!citizenId) throw new BadRequestException('Citizen ID is required');
 
@@ -83,4 +83,4 @@ export class ApplicationService {
       order: { appliedOn: 'DESC' },
     });
   }
-} // <-- Make sure this closing bracket exists
+} 

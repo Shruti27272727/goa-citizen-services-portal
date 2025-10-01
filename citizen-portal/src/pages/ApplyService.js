@@ -8,9 +8,9 @@ const ApplyService = () => {
   const [serviceId, setServiceId] = useState("");
   const [files, setFiles] = useState([]);
   const [remarks, setRemarks] = useState("");
-  const [order, setOrder] = useState(null); // store Razorpay order
+  const [order, setOrder] = useState(null);
 
-  // Example services (replace with dynamic fetch if needed)
+  
   const services = [
     { id: 1, name: "Birth Certificate", fee: 10000 },
     { id: 2, name: "Aadhaar Service", fee: 5000 },

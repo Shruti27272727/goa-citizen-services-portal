@@ -16,7 +16,7 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  // ---------------- Citizen Registration ----------------
+
   async register(email: string, contact: string, password: string) {
     if (!email || !contact || !password) {
       throw new BadRequestException(
@@ -24,7 +24,7 @@ export class AuthService {
       );
     }
 
-    // Check if email already exists in citizens
+    
     const existing = await this.citizenRepository.findOne({ where: { email } });
     if (existing) {
       throw new BadRequestException('Email already exists');
@@ -35,7 +35,7 @@ export class AuthService {
       email,
       phone: contact,
       password: hashedPassword,
-      role: 'citizen', // default role
+      role: 'citizen', 
     });
 
     await this.citizenRepository.save(newCitizen);
@@ -52,7 +52,7 @@ export class AuthService {
     };
   }
 
-  // ---------------- Login (Citizen / Officer / Admin) ----------------
+  
   async login(email: string, password: string) {
     if (!email || !password) {
       throw new BadRequestException('Email and password are required');
@@ -61,30 +61,30 @@ export class AuthService {
     let user: Citizen | Officer | null = null;
     let role: 'citizen' | 'officer' | 'admin' = 'citizen';
 
-    // 1️⃣ Check if user exists as citizen (including admin)
+    
     user = await this.citizenRepository.findOne({ where: { email } });
     if (user) {
       role = user.role === 'admin' ? 'admin' : 'citizen';
     }
 
-    // 2️⃣ If not citizen, check officer
+    
     if (!user) {
       user = await this.officerRepository.findOne({ where: { email } });
       role = 'officer';
     }
 
-    // 3️⃣ If still not found
+    
     if (!user) {
       throw new UnauthorizedException('User not found');
     }
 
-    // 4️⃣ Validate password
+ 
     const validPassword = await bcrypt.compare(password, user.password);
     if (!validPassword) {
       throw new UnauthorizedException('Incorrect password');
     }
 
-    // 5️⃣ Generate JWT including role
+    
     const token = this.jwtService.sign({
       id: user.id,
       email: user.email,
@@ -95,7 +95,7 @@ export class AuthService {
       id: user.id,
       email: user.email,
       token,
-      role, // frontend will redirect based on this
+      role, 
     };
   }
 }

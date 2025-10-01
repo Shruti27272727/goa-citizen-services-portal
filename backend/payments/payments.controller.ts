@@ -13,11 +13,11 @@ import { PaymentsService } from './payments.service';
 export class PaymentsController {
   constructor(private readonly paymentsService: PaymentsService) {}
 
-  // ---------------- Create payment order ----------------
+
   @Post('create')
   async createPayment(
     @Body('applicationId', ParseIntPipe) applicationId: number,
-    @Body('amount', ParseIntPipe) amount: number, // Ensure both are numbers
+    @Body('amount', ParseIntPipe) amount: number, 
   ) {
     if (!applicationId || !amount) {
       throw new BadRequestException('Application ID and amount are required');
@@ -25,14 +25,14 @@ export class PaymentsController {
     return this.paymentsService.createPayment(applicationId, amount);
   }
 
-  // ---------------- Get payment details by orderId ----------------
+ 
   @Get('order/:orderId')
   async getPayment(@Param('orderId') orderId: string) {
     if (!orderId) throw new BadRequestException('Order ID is required');
     return this.paymentsService.getPaymentByOrderId(orderId);
   }
 
-  // ---------------- Get all payments for an application ----------------
+ 
   @Get('application/:applicationId')
   async getPaymentsByApplication(
     @Param('applicationId', ParseIntPipe) applicationId: number,
