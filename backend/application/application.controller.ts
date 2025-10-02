@@ -15,10 +15,10 @@ export class ApplicationController {
     @Body('remarks') remarks: string,
     @UploadedFiles() files: Express.Multer.File[],
   ) {
-    const parsedRemarks = remarks ? JSON.parse(remarks) : [];
+    
     console.log('checkservice',serviceId);
     console.log('citizenidcheck',citizenId);
-    return this.appService.createWithDocument(citizenId, serviceId, parsedRemarks, files);
+    return this.appService.createWithDocument(citizenId, serviceId, files);
   }
 
  

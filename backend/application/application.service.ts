@@ -50,7 +50,7 @@ export class ApplicationService {
     
     const application = this.applicationRepo.create({
       status: ApplicationStatus.PENDING,
-      remarks,
+      
       citizen,
       service,
     });
