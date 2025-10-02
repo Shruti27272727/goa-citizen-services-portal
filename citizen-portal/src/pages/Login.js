@@ -14,7 +14,7 @@ const Login = () => {
 
   const handleLogin = async () => {
     try {
-      // Call backend login
+      
       const res = await axios.post("/auth/login", { email, password });
       const userData = res.data;
 

@@ -5,10 +5,11 @@ import RazorpayButton from "../components/RazorpayButton";
 
 const ApplyService = () => {
   const { user } = useContext(AuthContext);
-  const [serviceId, setServiceId] = useState("");
+  const [serviceId, setServiceId] = useState(null);
   const [files, setFiles] = useState([]);
   const [remarks, setRemarks] = useState("");
   const [order, setOrder] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   
   const services = [
@@ -24,25 +25,23 @@ const ApplyService = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!serviceId || files.length === 0) {
-      alert("Please select a service and upload at least one file.");
-      return;
-    }
-
-    if (!user?.id) {
-      alert("Please log in first!");
-      return;
-    }
+    if (!serviceId) return alert("Please select a service.");
+    if (!files.length) return alert("Please upload at least one document.");
+    if (!user?.id) return alert("Please log in first!");
 
     try {
-      // Prepare form data
+      setLoading(true);
+
+      const selectedServiceId = Number(serviceId);
+      const selectedService = services.find((s) => s.id === selectedServiceId);
+      if (!selectedService) return alert("Invalid service selected.");
+
       const formData = new FormData();
       formData.append("citizenId", user.id);
-      formData.append("serviceId", Number(serviceId));
+      formData.append("serviceId", selectedServiceId);
       formData.append("remarks", JSON.stringify([remarks]));
       files.forEach((file) => formData.append("documents", file));
 
-      // Backend endpoint returns both application + payment info
       const res = await axios.post(
         "http://localhost:5000/applications/apply",
         formData,
@@ -53,16 +52,17 @@ const ApplyService = () => {
       if (!paymentOrder) throw new Error("Payment order not returned from backend.");
 
       setOrder(paymentOrder);
-
-      alert("Application submitted successfully! Please complete the payment.");
+      alert(`Application for "${selectedService.name}" submitted successfully! Please complete the payment.`);
 
       // Reset form
-      setServiceId("");
+      setServiceId(null);
       setFiles([]);
       setRemarks("");
     } catch (err) {
       console.error(err);
       alert("Failed to apply: " + (err.response?.data?.message || err.message));
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -73,8 +73,8 @@ const ApplyService = () => {
         <label>
           Select Service:
           <select
-            value={serviceId}
-            onChange={(e) => setServiceId(e.target.value)}
+            value={serviceId ?? ""}
+            onChange={(e) => setServiceId(e.target.value ? Number(e.target.value) : null)}
             required
           >
             <option value="">--Select a service--</option>
@@ -100,12 +100,11 @@ const ApplyService = () => {
           <input type="file" multiple onChange={handleFileChange} required />
         </label>
         <br />
-        <button type="submit" style={{ marginTop: "10px" }}>
-          Apply
+        <button type="submit" style={{ marginTop: "10px" }} disabled={loading}>
+          {loading ? "Submitting..." : "Apply"}
         </button>
       </form>
 
-      {/* Show RazorpayButton only if payment order exists */}
       {order?.id && (
         <div style={{ marginTop: "20px" }}>
           <h3>Complete your Payment</h3>

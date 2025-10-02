@@ -17,14 +17,14 @@ interface LoginDto {
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  // Registration endpoint
+ 
   @Post('register')
   async register(@Body() body: RegisterDto) {
     console.log('Received registration body:', body);
 
     const { email, phone, aadhaar, password } = body;
 
-    // Validate required fields
+    
     if (!email || !password || (!phone && !aadhaar)) {
       throw new BadRequestException('Email, phone or Aadhaar, and password are required');
     }

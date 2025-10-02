@@ -6,62 +6,82 @@ import { Citizen } from '../citizen/citizen.entity';
 import { Service } from '../services/services.entity';
 import { Document } from '../documents/documents.entity';
 import { PaymentsService } from '../payments/payments.service';
+import { Officer } from '../officers/officer.entity';
+import { join } from 'path';
+import { existsSync, mkdirSync } from 'fs';
 
 @Injectable()
 export class ApplicationService {
   constructor(
     @InjectRepository(Application)
-    private applicationRepo: Repository<Application>,
+    private readonly applicationRepo: Repository<Application>,
 
     @InjectRepository(Citizen)
-    private citizenRepo: Repository<Citizen>,
+    private readonly citizenRepo: Repository<Citizen>,
 
     @InjectRepository(Service)
-    private serviceRepo: Repository<Service>,
+    private readonly serviceRepo: Repository<Service>,
 
     @InjectRepository(Document)
-    private documentRepo: Repository<Document>,
+    private readonly documentRepo: Repository<Document>,
 
-    private paymentsService: PaymentsService,
+    @InjectRepository(Officer)
+    private readonly officerRepo: Repository<Officer>,
+
+    private readonly paymentsService: PaymentsService,
   ) {}
 
   async createWithDocument(
     citizenId: number,
-    serviceId: number,
-    remarks: string[],
-    files: Express.Multer.File[],
+    serviceId: number | string,
+    remarks: string[] = [],
+    files: Express.Multer.File[] = [],
   ) {
+  
     const citizen = await this.citizenRepo.findOne({ where: { id: citizenId } });
-    if (!citizen) throw new NotFoundException(`Citizen not found`);
+    if (!citizen) throw new NotFoundException('Citizen not found');
 
-    const service = await this.serviceRepo.findOne({ where: { id: serviceId } });
-    if (!service) throw new NotFoundException(`Service not found`);
+    const serviceIdNum = Number(serviceId);
+    if (isNaN(serviceIdNum) || serviceIdNum <= 0)
+      throw new BadRequestException('Invalid serviceId');
 
+    const service = await this.serviceRepo.findOne({ where: { id: serviceIdNum } });
+    if (!service) throw new NotFoundException('Service not found');
+
+    
     const application = this.applicationRepo.create({
       status: ApplicationStatus.PENDING,
       remarks,
       citizen,
       service,
     });
-
     const savedApp = await this.applicationRepo.save(application);
 
-    if (files?.length) {
-      for (const file of files) {
-        const doc = this.documentRepo.create({
-          fileName: file.originalname,
-          filePath: file.path || '',
-          application: savedApp,
-        });
-        await this.documentRepo.save(doc);
-      }
+    
+    const uploadDir = join(__dirname, '../../uploads');
+    if (!existsSync(uploadDir)) mkdirSync(uploadDir, { recursive: true });
+
+    for (const file of files) {
+      const doc = this.documentRepo.create({
+        fileName: file.originalname,
+        filePath: file.path || file.filename,
+        application: savedApp,
+      });
+      await this.documentRepo.save(doc);
     }
 
+   
     const amount = service.fee || 1000;
     const payment = await this.paymentsService.createPayment(savedApp.id, amount);
 
+    
+    const applicationWithRelations = await this.applicationRepo.findOne({
+      where: { id: savedApp.id },
+      relations: ['service', 'documents', 'officer'],
+    });
+
     return {
-      application: savedApp,
+      application: applicationWithRelations,
       payment: {
         id: payment.id,
         order: {
@@ -73,14 +93,41 @@ export class ApplicationService {
     };
   }
 
- 
   async getApplicationsByCitizen(citizenId: number) {
     if (!citizenId) throw new BadRequestException('Citizen ID is required');
 
     return this.applicationRepo.find({
       where: { citizen: { id: citizenId } },
-      relations: ['service', 'documents'],
+      relations: ['service', 'documents', 'officer'],
       order: { appliedOn: 'DESC' },
     });
   }
-} 
+
+  async getUserHistory(citizenId: number): Promise<Application[]> {
+    if (!citizenId) throw new BadRequestException('Citizen ID is required');
+
+    
+    return this.applicationRepo.find({
+      where: { citizen: { id: citizenId } },
+      relations: ['service', 'documents', 'officer'],
+      order: { appliedOn: 'DESC' },
+    });
+  }
+
+  async approveApplication(applicationId: number, officerId: number): Promise<Application> {
+    const application = await this.applicationRepo.findOne({
+      where: { id: applicationId },
+      relations: ['officer', 'service', 'documents', 'citizen'],
+    });
+    if (!application) throw new NotFoundException('Application not found');
+
+    const officer = await this.officerRepo.findOne({ where: { id: officerId } });
+    if (!officer) throw new NotFoundException('Officer not found');
+
+    application.status = ApplicationStatus.APPROVED;
+    application.completedOn = new Date();
+    application.officer = officer;
+
+    return await this.applicationRepo.save(application);
+  }
+}

@@ -10,8 +10,8 @@ const ApplicationHistory = ({ refreshTrigger }) => {
 
   useEffect(() => {
     const fetchApplications = async () => {
-      if (!user || !user.id) {
-        setError("Please login to view your application history.");
+      if (!user?.id) {
+        setError("Please log in to view your application history.");
         setLoading(false);
         return;
       }
@@ -21,11 +21,15 @@ const ApplicationHistory = ({ refreshTrigger }) => {
 
       try {
         const res = await axios.get(
-          `http://localhost:5000/applications/history?citizenId=${user.id}`
+          `http://localhost:5000/applications/history/${user.id}`
         );
 
-        if (res.data && Array.isArray(res.data.applications)) {
-          setApplications(res.data.applications);
+        if (Array.isArray(res.data)) {
+          // Optional: sort by appliedOn descending
+          const sortedApps = res.data.sort(
+            (a, b) => new Date(b.appliedOn) - new Date(a.appliedOn)
+          );
+          setApplications(sortedApps);
         } else {
           setApplications([]);
         }
@@ -38,35 +42,45 @@ const ApplicationHistory = ({ refreshTrigger }) => {
     };
 
     fetchApplications();
-  }, [user, refreshTrigger]); 
+  }, [user, refreshTrigger]);
 
-  if (loading) return <p>Loading...</p>;
-  if (error) return <p>{error}</p>;
+  if (loading) return <p>Loading application history...</p>;
+  if (error) return <p style={{ color: "red" }}>{error}</p>;
+
+  if (applications.length === 0) return <p>No applications found.</p>;
 
   return (
-    <div>
+    <div style={{ maxWidth: "900px", margin: "auto" }}>
       <h1>Application History</h1>
-      {applications.length === 0 ? (
-        <p>No applications found.</p>
-      ) : (
-        <table border="1" cellPadding="5" style={{ borderCollapse: "collapse", width: "100%" }}>
-          <thead>
-            <tr>
-              <th>Service</th>
-              <th>Status</th>
-              <th>Remarks</th>
-              <th>Documents</th>
-            </tr>
-          </thead>
-          <tbody>
-            {applications.map((app) => (
-              <tr key={app.id}>
-                <td>{app.service?.name ?? "N/A"}</td>
-                <td>{app.status ?? "-"}</td>
-                <td>{Array.isArray(app.remarks) ? app.remarks.join(", ") : "-"}</td>
-                <td>
-                  {app.documents && app.documents.length > 0 ? (
-                    app.documents.map((doc) => (
+      <table
+        border="1"
+        cellPadding="8"
+        style={{ borderCollapse: "collapse", width: "100%" }}
+      >
+        <thead>
+          <tr>
+            <th>Service</th>
+            <th>Status</th>
+            <th>Remarks</th>
+            <th>Documents</th>
+            <th>Applied On</th>
+            <th>Completed On</th>
+            <th>Officer</th>
+          </tr>
+        </thead>
+        <tbody>
+          {applications.map((app) => (
+            <tr key={app.id}>
+              <td>{app.service?.name ?? "N/A"}</td>
+              <td>{app.status ?? "-"}</td>
+              <td>
+                {Array.isArray(app.remarks) && app.remarks.length > 0
+                  ? app.remarks.join(", ")
+                  : "-"}
+              </td>
+              <td>
+                {app.documents && app.documents.length > 0
+                  ? app.documents.map((doc) => (
                       <div key={doc.id}>
                         <a
                           href={`http://localhost:5000/${doc.filePath}`}
@@ -77,15 +91,19 @@ const ApplicationHistory = ({ refreshTrigger }) => {
                         </a>
                       </div>
                     ))
-                  ) : (
-                    "-"
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+                  : "-"}
+              </td>
+              <td>{new Date(app.appliedOn).toLocaleString()}</td>
+              <td>
+                {app.completedOn
+                  ? new Date(app.completedOn).toLocaleString()
+                  : "-"}
+              </td>
+              <td>{app.officer?.name ?? "-"}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 };
