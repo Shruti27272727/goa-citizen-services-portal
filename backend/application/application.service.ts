@@ -29,14 +29,14 @@ export class ApplicationService {
     private readonly officerRepo: Repository<Officer>,
 
     private readonly paymentsService: PaymentsService,
-  ) {}
+  ) { }
 
   async createWithDocument(
     citizenId: number,
     serviceId: number | string,
     files: Express.Multer.File[] = [],
   ) {
-  
+
     const citizen = await this.citizenRepo.findOne({ where: { id: citizenId } });
     if (!citizen) throw new NotFoundException('Citizen not found');
 
@@ -47,7 +47,7 @@ export class ApplicationService {
     const service = await this.serviceRepo.findOne({ where: { id: serviceIdNum } });
     if (!service) throw new NotFoundException('Service not found');
 
-    
+
     const application = this.applicationRepo.create({
       status: ApplicationStatus.PENDING,
       citizen,
@@ -55,7 +55,7 @@ export class ApplicationService {
     });
     const savedApp = await this.applicationRepo.save(application);
 
-    
+
     const uploadDir = join(__dirname, '../../uploads');
     if (!existsSync(uploadDir)) mkdirSync(uploadDir, { recursive: true });
 
@@ -68,11 +68,11 @@ export class ApplicationService {
       await this.documentRepo.save(doc);
     }
 
-   
+
     const amount = service.fee || 1000;
     const payment = await this.paymentsService.createPayment(savedApp.id, amount);
 
-    
+
     const applicationWithRelations = await this.applicationRepo.findOne({
       where: { id: savedApp.id },
       relations: ['service', 'documents', 'officer'],
@@ -104,7 +104,7 @@ export class ApplicationService {
   async getUserHistory(citizenId: number): Promise<Application[]> {
     if (!citizenId) throw new BadRequestException('Citizen ID is required');
 
-    
+
     return this.applicationRepo.find({
       where: { citizen: { id: citizenId } },
       relations: ['service', 'documents', 'officer'],
@@ -112,17 +112,24 @@ export class ApplicationService {
     });
   }
 
-async getPendingApplications(): Promise<Application[]>{
-  return this.applicationRepo.find({
-      where: { status: ApplicationStatus.PENDING  },
+  async getPendingApplications(): Promise<Application[]> {
+    return this.applicationRepo.find({
+      where: { status: ApplicationStatus.PENDING },
       relations: ['service', 'documents', 'officer'],
       order: { appliedOn: 'DESC' },
     });
-}
+  }
 
+  async approveApplication(applicationId: number, officerId: number, remarks: string): Promise<Application> {
+    return this.changeApplicationStatus(applicationId, officerId, ApplicationStatus.APPROVED, remarks);
+  }
 
+  async rejectApplication(applicationId: number, officerId: number, remarks: string): Promise<Application> {
+    return this.changeApplicationStatus(applicationId, officerId, ApplicationStatus.REJECTED, remarks);
 
-  async approveApplication(applicationId: number, officerId: number): Promise<Application> {
+  }
+
+  async changeApplicationStatus(applicationId: number, officerId: number, status: ApplicationStatus, remarks: string): Promise<Application> {
     const application = await this.applicationRepo.findOne({
       where: { id: applicationId },
       relations: ['officer', 'service', 'documents', 'citizen'],
@@ -132,10 +139,11 @@ async getPendingApplications(): Promise<Application[]>{
     const officer = await this.officerRepo.findOne({ where: { id: officerId } });
     if (!officer) throw new NotFoundException('Officer not found');
 
-    application.status = ApplicationStatus.APPROVED;
+    application.status = status;
     application.completedOn = new Date();
     application.officer = officer;
-
+    application.remarks = remarks;
     return await this.applicationRepo.save(application);
   }
+
 }

@@ -7,7 +7,7 @@ const ApplyService = () => {
   const { user } = useContext(AuthContext);
   const [serviceId, setServiceId] = useState(null);
   const [files, setFiles] = useState([]);
-  const [remarks, setRemarks] = useState("");
+  
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -38,11 +38,8 @@ const ApplyService = () => {
 
       const formData = new FormData();
       formData.append("citizenId", user.id);
-      
-      formData.append("serviceId", selectedServiceId);
-      formData.append("remarks", JSON.stringify([remarks]));
+      formData.append("serviceId", selectedServiceId); 
       files.forEach((file) => formData.append("documents", file));
-
       const res = await axios.post(
         "http://localhost:5000/applications/apply",
         formData,
@@ -83,15 +80,6 @@ const ApplyService = () => {
               </option>
             ))}
           </select>
-        </label>
-        <br />
-        <label>
-          Remarks:
-          <input
-            type="text"
-            value={remarks}
-            onChange={(e) => setRemarks(e.target.value)}
-          />
         </label>
         <br />
         <label>

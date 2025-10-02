@@ -4,9 +4,9 @@ import { ApplicationService } from './application.service';
 
 @Controller('applications')
 export class ApplicationController {
-  constructor(private readonly appService: ApplicationService) {}
+  constructor(private readonly appService: ApplicationService) { }
 
-  
+
   @Post('apply')
   @UseInterceptors(FilesInterceptor('documents'))
   async apply(
@@ -15,36 +15,51 @@ export class ApplicationController {
     @Body('remarks') remarks: string,
     @UploadedFiles() files: Express.Multer.File[],
   ) {
-    
-    console.log('checkservice',serviceId);
-    console.log('citizenidcheck',citizenId);
+
+    console.log('checkservice', serviceId);
+    console.log('citizenidcheck', citizenId);
     return this.appService.createWithDocument(citizenId, serviceId, files);
   }
 
- 
+
   @Get('citizen/:id')
   async getByCitizen(@Param('id') citizenId: number) {
     return this.appService.getApplicationsByCitizen(citizenId);
   }
 
-  
+
   @Get('history/:citizenId')
   async getHistory(@Param('citizenId') citizenId: number) {
     return this.appService.getUserHistory(citizenId);
   }
 
-@Get('pending-applications')
-async getPendingApplication(){
-  return this.appService.getPendingApplications();
+  @Get('pending-applications')
+  async getPendingApplication() {
+    return this.appService.getPendingApplications();
 
-}
+  }
 
 
   @Post('approve/:applicationId/:officerId')
   async approve(
     @Param('applicationId') applicationId: number,
     @Param('officerId') officerId: number,
+    @Body('remarks') remarks: string,
   ) {
-    return this.appService.approveApplication(applicationId, officerId);
+    return this.appService.approveApplication(applicationId, officerId, remarks);
   }
+
+  @Post('reject/:applicationId/:officerId')
+  async reject(
+    @Param('applicationId') applicationId: number,
+    @Param('officerId') officerId: number,
+    @Body('remarks') remarks: string,
+  ) {
+    return this.appService.rejectApplication(applicationId, officerId, remarks);
+  }
+
+
+
+
+
 }

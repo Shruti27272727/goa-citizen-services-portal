@@ -61,33 +61,33 @@ const ApplicationHistory = ({ refreshTrigger }) => {
           <tr>
             <th>Service</th>
             <th>Status</th>
-           
             <th>Documents</th>
             <th>Applied On</th>
             <th>Completed On</th>
             <th>Officer</th>
+            <th>Remarks</th>
           </tr>
         </thead>
         <tbody>
           {applications.map((app) => (
             <tr key={app.id}>
-            
+
               <td>{app.service?.name ?? "N/A"}</td>
               <td>{app.status ?? "-"}</td>
-              
+
               <td>
                 {app.documents && app.documents.length > 0
                   ? app.documents.map((doc) => (
-                      <div key={doc.id}>
-                        <a
-                          href={`http://localhost:5000/${doc.filePath}`}
-                          target="_blank"
-                          rel="noreferrer"
-                        >
-                          {doc.fileName}
-                        </a>
-                      </div>
-                    ))
+                    <div key={doc.id}>
+                      <a
+                        href={`http://localhost:5000/${doc.filePath}`}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        {doc.fileName}
+                      </a>
+                    </div>
+                  ))
                   : "-"}
               </td>
               <td>{new Date(app.appliedOn).toLocaleString()}</td>
@@ -97,6 +97,7 @@ const ApplicationHistory = ({ refreshTrigger }) => {
                   : "-"}
               </td>
               <td>{app.officer?.name ?? "-"}</td>
+              <td>{app.remarks}</td>
             </tr>
           ))}
         </tbody>

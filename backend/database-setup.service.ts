@@ -81,7 +81,7 @@ CREATE TABLE IF NOT EXISTS Applications (
     status VARCHAR(50) CHECK (status IN ('Pending',  'Approved', 'Rejected')) DEFAULT 'Pending',
     applied_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     completed_on TIMESTAMP,
-    remarks TEXT
+    remarks VARCHAR(50)
 );
 
 

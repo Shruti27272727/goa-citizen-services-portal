@@ -24,16 +24,16 @@ export class Application {
   @PrimaryGeneratedColumn({ name: 'id' })
   id: number;
 
-  @Column({ 
+  @Column({
     name: 'status',
-    type: 'varchar', 
-    length: 10, 
-    default: ApplicationStatus.PENDING 
+    type: 'varchar',
+    length: 10,
+    default: ApplicationStatus.PENDING
   })
   status: ApplicationStatus;
 
-  @Column('text', { name: 'remarks', array: true, nullable: true, default: () => "'{}'" })
-  remarks: string[];
+  @Column({ type: 'text', name: 'remarks', nullable: true })
+  remarks: string;
 
   @CreateDateColumn({ name: 'applied_on', type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   appliedOn: Date;
