@@ -120,6 +120,80 @@ export class ApplicationService {
     });
   }
 
+   async getAllApplications(): Promise<Application[]> {
+    return this.applicationRepo.find({
+      relations: ['service', 'documents', 'officer'],
+      order: { appliedOn: 'DESC' },
+    });
+  }
+
+ async getStatus(): Promise<any> {
+  const raw = await this.applicationRepo.query(`
+    SELECT status, COUNT(*)::int AS total
+    FROM applications
+    GROUP BY status;
+  `);
+
+  // Default object
+  const result = {
+    total: 0,
+    pending: 0,
+    approved: 0,
+    rejected: 0,
+  };
+
+  for (const row of raw) {
+    const key = row.status.toLowerCase(); // "Pending" → "pending"
+    result[key] = Number(row.total);
+    result.total += Number(row.total);
+  }
+
+  return result;
+}
+async getDashboardStatus() {
+  // 1. Application status counts
+  const rawStatus = await this.applicationRepo.query(`
+    SELECT status, COUNT(*) AS total
+    FROM applications
+    GROUP BY status
+  `);
+
+  const stats = {
+    total: 0,
+    pending: 0,
+    approved: 0,
+    rejected: 0,
+  };
+
+  rawStatus.forEach((row: any) => {
+    const statusName = row.status.toLowerCase();
+    const count = parseInt(row.total, 10);
+
+    stats.total += count;
+    if (statusName === 'pending') stats.pending = count;
+    if (statusName === 'approved') stats.approved = count;
+    if (statusName === 'rejected') stats.rejected = count;
+  });
+
+  // 2. Revenue per department
+  const rawRevenue = await this.applicationRepo.query(`
+    SELECT d.name AS department, SUM(p.amount) AS revenue
+    FROM payments p
+    INNER JOIN applications a ON a.id = p.application_id
+    INNER JOIN departments d ON d.id = a.department_id
+    GROUP BY d.name
+  `);
+
+  const revenueData: Record<string, number> = {};
+  rawRevenue.forEach((row: any) => {
+    revenueData[row.department] = parseInt(row.revenue, 10);
+  });
+
+  // ✅ return the correct object
+  return { stats, revenueData };
+}
+
+
   async approveApplication(applicationId: number, officerId: number, remarks: string): Promise<Application> {
     return this.changeApplicationStatus(applicationId, officerId, ApplicationStatus.APPROVED, remarks);
   }

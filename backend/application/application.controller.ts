@@ -39,6 +39,24 @@ export class ApplicationController {
 
   }
 
+   @Get('all')
+  async getAllApplications() {
+    return this.appService.getAllApplications();
+
+  }
+
+  @Get('status')
+  async getStatus(){
+    return this.appService.getStatus();
+  }
+
+ 
+@Get(' getDashboardStatus')
+  async getDashboardStatus(){
+    return this.appService. getDashboardStatus();
+  }
+
+   
 
   @Post('approve/:applicationId/:officerId')
   async approve(
