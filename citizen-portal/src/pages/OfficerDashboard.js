@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useContext } from "react";
 import axios from "axios";
 import { AuthContext } from "../context/AuthContext";
-
 const OfficerDashboard = () => {
   const { user } = useContext(AuthContext);
   const [applications, setApplications] = useState([]);
@@ -9,11 +8,13 @@ const OfficerDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState({});
 
+
+
   useEffect(() => {
     const fetchApplications = async () => {
       try {
         const res = await axios.get(
-          "http://localhost:5000/officer/pending-applications",
+          "http://localhost:5000/applications/pending-applications",
           { headers: { Authorization: `Bearer ${user.token}` } }
         );
         setApplications(res.data);
@@ -73,7 +74,7 @@ const OfficerDashboard = () => {
               }}
             >
               <h3>{app.applicantName}</h3>
-              <p>Service: {app.serviceType}</p>
+              <p>Service: {(app.service?.name)}</p>
               <p>
                 Status:{" "}
                 <span

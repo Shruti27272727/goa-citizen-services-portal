@@ -11,7 +11,7 @@ export class OfficerController {
   findAll(): Promise<Officer[]> {
     return this.officerService.findAll();
   }
-
+  
   @Get(':id')
   findOne(@Param('id') id: number): Promise<Officer> {
     return this.officerService.findOne(id);

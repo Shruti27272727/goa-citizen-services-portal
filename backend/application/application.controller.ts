@@ -33,6 +33,12 @@ export class ApplicationController {
     return this.appService.getUserHistory(citizenId);
   }
 
+@Get('pending-applications')
+async getPendingApplication(){
+  return this.appService.getPendingApplications();
+
+}
+
 
   @Post('approve/:applicationId/:officerId')
   async approve(

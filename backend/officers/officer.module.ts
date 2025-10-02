@@ -4,13 +4,14 @@ import { Officer } from './officer.entity';
 import { OfficerService } from './officer.service';
 import { OfficerController } from './officer.controller';
 
+
 @Module({
   imports: [TypeOrmModule.forFeature([Officer])],
   providers: [OfficerService],
   controllers: [OfficerController],
   exports: [
     OfficerService,
-    TypeOrmModule, 
+    TypeOrmModule
   ],
 })
 export class OfficerModule {}

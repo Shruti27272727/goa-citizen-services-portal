@@ -50,7 +50,6 @@ export class ApplicationService {
     
     const application = this.applicationRepo.create({
       status: ApplicationStatus.PENDING,
-      
       citizen,
       service,
     });
@@ -112,6 +111,16 @@ export class ApplicationService {
       order: { appliedOn: 'DESC' },
     });
   }
+
+async getPendingApplications(): Promise<Application[]>{
+  return this.applicationRepo.find({
+      where: { status: ApplicationStatus.PENDING  },
+      relations: ['service', 'documents', 'officer'],
+      order: { appliedOn: 'DESC' },
+    });
+}
+
+
 
   async approveApplication(applicationId: number, officerId: number): Promise<Application> {
     const application = await this.applicationRepo.findOne({
