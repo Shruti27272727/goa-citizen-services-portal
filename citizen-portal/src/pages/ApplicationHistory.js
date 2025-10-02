@@ -61,7 +61,7 @@ const ApplicationHistory = ({ refreshTrigger }) => {
           <tr>
             <th>Service</th>
             <th>Status</th>
-            <th>Remarks</th>
+           
             <th>Documents</th>
             <th>Applied On</th>
             <th>Completed On</th>
@@ -71,13 +71,10 @@ const ApplicationHistory = ({ refreshTrigger }) => {
         <tbody>
           {applications.map((app) => (
             <tr key={app.id}>
+            
               <td>{app.service?.name ?? "N/A"}</td>
               <td>{app.status ?? "-"}</td>
-              <td>
-                {Array.isArray(app.remarks) && app.remarks.length > 0
-                  ? app.remarks.join(", ")
-                  : "-"}
-              </td>
+              
               <td>
                 {app.documents && app.documents.length > 0
                   ? app.documents.map((doc) => (

@@ -14,9 +14,9 @@ import { Document } from '../documents/documents.entity';
 import { Payment } from '../payments/payments.entity';
 
 export enum ApplicationStatus {
-  PENDING = 'PENDING',
-  APPROVED = 'APPROVED',
-  REJECTED = 'REJECTED',
+  PENDING = 'Pending',
+  APPROVED = 'Approved',
+  REJECTED = 'Rejected',
 }
 
 @Entity({ name: 'applications' })

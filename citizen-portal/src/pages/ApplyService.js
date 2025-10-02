@@ -13,9 +13,9 @@ const ApplyService = () => {
 
   
   const services = [
-    { id: 1, name: "Birth Certificate", fee: 10000 },
-    { id: 2, name: "Aadhaar Service", fee: 5000 },
-    { id: 3, name: "Residence Certificate", fee: 20000 },
+    { id: 2, name: "Birth Certificate", fee: 10000 },
+    { id: 3, name: "Aadhaar Service", fee: 5000 },
+    { id: 1, name: "Residence Certificate", fee: 20000 },
   ];
 
   const handleFileChange = (e) => {
@@ -38,6 +38,7 @@ const ApplyService = () => {
 
       const formData = new FormData();
       formData.append("citizenId", user.id);
+      
       formData.append("serviceId", selectedServiceId);
       formData.append("remarks", JSON.stringify([remarks]));
       files.forEach((file) => formData.append("documents", file));
@@ -54,10 +55,8 @@ const ApplyService = () => {
       setOrder(paymentOrder);
       alert(`Application for "${selectedService.name}" submitted successfully! Please complete the payment.`);
 
-      // Reset form
-      setServiceId(null);
-      setFiles([]);
-      setRemarks("");
+     
+     
     } catch (err) {
       console.error(err);
       alert("Failed to apply: " + (err.response?.data?.message || err.message));

@@ -34,7 +34,6 @@ export class ApplicationService {
   async createWithDocument(
     citizenId: number,
     serviceId: number | string,
-    remarks: string[] = [],
     files: Express.Multer.File[] = [],
   ) {
   
