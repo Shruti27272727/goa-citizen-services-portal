@@ -32,14 +32,13 @@ const OfficerDashboard = ({ refreshTrigger }) => {
     try {
       await axios.post(
         `http://localhost:5000/applications/${action}/${id}/${user.id}`,
-        { remarks: remarks[id] || "" }, // send the remark for this specific app
+        { remarks: remarks[id] || "" },
         { headers: { Authorization: `Bearer ${user.token}` } }
       );
 
       alert(`Application ${action}ed successfully!`);
       setApplications(applications.filter((app) => app.id !== id));
 
-      // Remove the remark for this application
       setRemarks((prev) => {
         const copy = { ...prev };
         delete copy[id];
@@ -48,6 +47,27 @@ const OfficerDashboard = ({ refreshTrigger }) => {
     } catch (err) {
       console.error(err);
       alert("Action failed: " + (err.response?.data?.message || err.message));
+    } finally {
+      setProcessing((prev) => ({ ...prev, [id]: false }));
+    }
+  };
+
+  // ✅ New: Save remark without changing status
+  const handleSaveRemark = async (id) => {
+    if (!remarks[id] || remarks[id].trim() === "") return alert("Remark cannot be empty");
+
+    setProcessing((prev) => ({ ...prev, [id]: true }));
+    try {
+      await axios.post(
+        `http://localhost:5000/applications/add-remark/${id}/${user.id}`,
+        { remark: remarks[id] },
+        { headers: { Authorization: `Bearer ${user.token}` } }
+      );
+
+      alert("Remark saved successfully!");
+    } catch (err) {
+      console.error(err);
+      alert("Saving remark failed: " + (err.response?.data?.message || err.message));
     } finally {
       setProcessing((prev) => ({ ...prev, [id]: false }));
     }
@@ -106,19 +126,27 @@ const OfficerDashboard = ({ refreshTrigger }) => {
                 />
               </label>
 
-              <button
-                onClick={() => handleAction(app.id, "approve")}
-                disabled={processing[app.id]}
-                style={{ marginRight: "10px" }}
-              >
-                Approve
-              </button>
-              <button
-                onClick={() => handleAction(app.id, "reject")}
-                disabled={processing[app.id]}
-              >
-                Reject
-              </button>
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <button
+                  onClick={() => handleAction(app.id, "approve")}
+                  disabled={processing[app.id]}
+                >
+                  Approve
+                </button>
+                <button
+                  onClick={() => handleAction(app.id, "reject")}
+                  disabled={processing[app.id]}
+                >
+                  Reject
+                </button>
+                <button
+                  onClick={() => handleSaveRemark(app.id)}
+                  disabled={processing[app.id]}
+                  style={{ backgroundColor: "#007bff", color: "#fff" }}
+                >
+                  Save Remark
+                </button>
+              </div>
             </div>
           ))}
         </div>

@@ -21,7 +21,8 @@ const ApplicationHistory = ({ refreshTrigger }) => {
 
       try {
         const res = await axios.get(
-          `http://localhost:5000/applications/history/${user.id}`
+          `http://localhost:5000/applications/history/${user.id}`,
+          { headers: { Authorization: `Bearer ${user.token}` } }
         );
 
         if (Array.isArray(res.data)) {
@@ -41,7 +42,7 @@ const ApplicationHistory = ({ refreshTrigger }) => {
     };
 
     fetchApplications();
-  }, [user, refreshTrigger]);
+  }, [user, refreshTrigger]); // refreshTrigger can be incremented whenever a remark is added
 
   if (loading) return <p>Loading application history...</p>;
   if (error) return <p style={{ color: "red" }}>{error}</p>;
@@ -74,7 +75,7 @@ const ApplicationHistory = ({ refreshTrigger }) => {
               <td>{app.service?.department?.name ?? "-"}</td>
               <td>{app.status ?? "-"}</td>
               <td>
-                {app.documents && app.documents.length > 0
+                {app.documents?.length > 0
                   ? app.documents.map((doc) => (
                       <div key={doc.id}>
                         <a

@@ -6,49 +6,48 @@ import { ApplicationService } from './application.service';
 export class ApplicationController {
   constructor(private readonly appService: ApplicationService) {}
 
-  // ✅ Apply for a service with documents
+  /** APPLY FOR A SERVICE WITH DOCUMENTS **/
   @Post('apply')
   @UseInterceptors(FilesInterceptor('documents'))
   async apply(
     @Body('citizenId') citizenId: number,
     @Body('serviceId') serviceId: number,
-    @Body('remarks') remarks: string,
     @UploadedFiles() files: Express.Multer.File[],
   ) {
     return this.appService.createWithDocument(citizenId, serviceId, files);
   }
 
-  // ✅ Get all applications of a citizen
+  /** GET ALL APPLICATIONS OF A CITIZEN **/
   @Get('citizen/:id')
   async getByCitizen(@Param('id') citizenId: number) {
     return this.appService.getApplicationsByCitizen(citizenId);
   }
 
-  // ✅ Get full history of applications for a citizen
+  /** GET FULL HISTORY OF APPLICATIONS FOR A CITIZEN **/
   @Get('history/:citizenId')
   async getHistory(@Param('citizenId') citizenId: number) {
     return this.appService.getUserHistory(citizenId);
   }
 
-  // ✅ Get all pending applications for officers
+  /** GET ALL PENDING APPLICATIONS (FOR OFFICERS) **/
   @Get('pending-applications')
   async getPendingApplications() {
     return this.appService.getPendingApplications();
   }
 
-  // ✅ Get all applications (admin)
+  /** GET ALL APPLICATIONS (ADMIN) **/
   @Get('all')
   async getAllApplications() {
     return this.appService.getAllApplications();
   }
 
-  // ✅ Get dashboard stats and revenue
+  /** GET DASHBOARD STATS AND REVENUE **/
   @Get('getDashboardStatus')
   async getDashboardStatus() {
     return this.appService.getDashboardStatus();
   }
 
-  // ✅ Approve application
+  /** APPROVE APPLICATION **/
   @Post('approve/:applicationId/:officerId')
   async approve(
     @Param('applicationId') applicationId: number,
@@ -58,7 +57,7 @@ export class ApplicationController {
     return this.appService.approveApplication(applicationId, officerId, remarks);
   }
 
-  // ✅ Reject application
+  /** REJECT APPLICATION **/
   @Post('reject/:applicationId/:officerId')
   async reject(
     @Param('applicationId') applicationId: number,
@@ -66,5 +65,15 @@ export class ApplicationController {
     @Body('remarks') remarks: string,
   ) {
     return this.appService.rejectApplication(applicationId, officerId, remarks);
+  }
+
+  /** ADD OR UPDATE REMARKS WITHOUT CHANGING STATUS **/
+  @Post('add-remark/:applicationId/:officerId')
+  async addRemark(
+    @Param('applicationId') applicationId: number,
+    @Param('officerId') officerId: number,
+    @Body('remark') remark: string,
+  ) {
+    return this.appService.addRemark(applicationId, officerId, remark);
   }
 }

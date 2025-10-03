@@ -31,7 +31,7 @@ export class ApplicationService {
     private readonly paymentsService: PaymentsService,
   ) {}
 
-  // Create application with documents and payment
+  /** CREATE APPLICATION WITH DOCUMENTS & PAYMENT **/
   async createWithDocument(
     citizenId: number,
     serviceId: number | string,
@@ -95,6 +95,7 @@ export class ApplicationService {
     };
   }
 
+  /** GET APPLICATIONS BY CITIZEN **/
   async getApplicationsByCitizen(citizenId: number) {
     return this.applicationRepo.find({
       where: { citizen: { id: citizenId } },
@@ -103,6 +104,7 @@ export class ApplicationService {
     });
   }
 
+  /** GET USER HISTORY **/
   async getUserHistory(citizenId: number) {
     return this.applicationRepo.find({
       where: { citizen: { id: citizenId } },
@@ -111,6 +113,7 @@ export class ApplicationService {
     });
   }
 
+  /** GET PENDING APPLICATIONS **/
   async getPendingApplications() {
     return this.applicationRepo.find({
       where: { status: ApplicationStatus.PENDING },
@@ -119,6 +122,7 @@ export class ApplicationService {
     });
   }
 
+  /** GET ALL APPLICATIONS **/
   async getAllApplications() {
     return this.applicationRepo.find({
       relations: ['service', 'service.department', 'documents', 'officer', 'citizen'],
@@ -126,9 +130,8 @@ export class ApplicationService {
     });
   }
 
-  // Dashboard statistics and revenue
+  /** DASHBOARD STATS & REVENUE **/
   async getDashboardStatus() {
-    // Application counts
     const rawStatus = await this.applicationRepo.query(`
       SELECT status, COUNT(*) AS total
       FROM applications
@@ -145,7 +148,6 @@ export class ApplicationService {
       if (key === 'rejected') stats.rejected = count;
     });
 
-    // Revenue per department with LEFT JOIN to always include all departments
     const rawRevenue = await this.applicationRepo.query(`
       SELECT d.name AS department, COALESCE(SUM(p.amount), 0) AS revenue
       FROM departments d
@@ -156,21 +158,36 @@ export class ApplicationService {
       GROUP BY d.name
     `);
 
-    const revenueData: Record<string, number> = {
-      Revenue: 0,
-      Panchayat: 0,
-      Transport: 0,
-    };
+    const revenueData: Record<string, number> = { Revenue: 0, Panchayat: 0, Transport: 0 };
     rawRevenue.forEach((row: any) => {
-      const dept = row.department;
-      const rev = parseInt(row.revenue, 10);
-      revenueData[dept] = rev;
+      revenueData[row.department] = parseInt(row.revenue, 10);
     });
 
     return { stats, revenueData };
   }
 
-  // Approve / Reject applications
+  /** ADD/UPDATE REMARKS ONLY **/
+  async addRemark(applicationId: number, officerId: number, remark: string) {
+    if (!remark || remark.trim() === '') {
+      throw new BadRequestException('Remark cannot be empty');
+    }
+
+    const app = await this.applicationRepo.findOne({
+      where: { id: applicationId },
+      relations: ['officer', 'service', 'service.department', 'documents', 'citizen'],
+    });
+    if (!app) throw new NotFoundException('Application not found');
+
+    const officer = await this.officerRepo.findOne({ where: { id: officerId } });
+    if (!officer) throw new NotFoundException('Officer not found');
+
+    app.remarks = remark;
+    app.officer = officer;
+
+    return this.applicationRepo.save(app);
+  }
+
+  /** APPROVE / REJECT APPLICATION **/
   async approveApplication(appId: number, officerId: number, remarks: string) {
     return this.changeApplicationStatus(appId, officerId, ApplicationStatus.APPROVED, remarks);
   }
