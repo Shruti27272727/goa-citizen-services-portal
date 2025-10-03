@@ -7,15 +7,15 @@ const ApplyService = () => {
   const { user } = useContext(AuthContext);
   const [serviceId, setServiceId] = useState(null);
   const [files, setFiles] = useState([]);
-  
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  
+  // Services categorized by department
   const services = [
-    { id: 2, name: "Birth Certificate", fee: 10000 },
-    { id: 3, name: "Aadhaar Service", fee: 5000 },
-    { id: 1, name: "Residence Certificate", fee: 20000 },
+    { id: 1, name: "Residence Certificate", fee: 200, department: "Revenue" },
+    { id: 2, name: "Birth Certificate", fee: 50, department: "Panchayat" },
+    { id: 3, name: "Aadhaar Card", fee: 100, department: "Panchayat" },
+    { id: 4, name: "Driving License", fee: 300, department: "Transport" },
   ];
 
   const handleFileChange = (e) => {
@@ -24,7 +24,6 @@ const ApplyService = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (!serviceId) return alert("Please select a service.");
     if (!files.length) return alert("Please upload at least one document.");
     if (!user?.id) return alert("Please log in first!");
@@ -38,8 +37,9 @@ const ApplyService = () => {
 
       const formData = new FormData();
       formData.append("citizenId", user.id);
-      formData.append("serviceId", selectedServiceId); 
+      formData.append("serviceId", selectedServiceId);
       files.forEach((file) => formData.append("documents", file));
+
       const res = await axios.post(
         "http://localhost:5000/applications/apply",
         formData,
@@ -50,10 +50,9 @@ const ApplyService = () => {
       if (!paymentOrder) throw new Error("Payment order not returned from backend.");
 
       setOrder(paymentOrder);
-      alert(`Application for "${selectedService.name}" submitted successfully! Please complete the payment.`);
-
-     
-     
+      alert(
+        `Application for "${selectedService.name}" (${selectedService.department} Department) submitted successfully! Please complete the payment.`
+      );
     } catch (err) {
       console.error(err);
       alert("Failed to apply: " + (err.response?.data?.message || err.message));
@@ -76,7 +75,7 @@ const ApplyService = () => {
             <option value="">--Select a service--</option>
             {services.map((s) => (
               <option key={s.id} value={s.id}>
-                {s.name} (₹{s.fee / 100})
+                {s.name} ({s.department}) - ₹{s.fee}
               </option>
             ))}
           </select>

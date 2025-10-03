@@ -25,7 +25,6 @@ const ApplicationHistory = ({ refreshTrigger }) => {
         );
 
         if (Array.isArray(res.data)) {
-          // Optional: sort by appliedOn descending
           const sortedApps = res.data.sort(
             (a, b) => new Date(b.appliedOn) - new Date(a.appliedOn)
           );
@@ -46,7 +45,6 @@ const ApplicationHistory = ({ refreshTrigger }) => {
 
   if (loading) return <p>Loading application history...</p>;
   if (error) return <p style={{ color: "red" }}>{error}</p>;
-
   if (applications.length === 0) return <p>No applications found.</p>;
 
   return (
@@ -60,6 +58,7 @@ const ApplicationHistory = ({ refreshTrigger }) => {
         <thead>
           <tr>
             <th>Service</th>
+            <th>Department</th>
             <th>Status</th>
             <th>Documents</th>
             <th>Applied On</th>
@@ -71,23 +70,22 @@ const ApplicationHistory = ({ refreshTrigger }) => {
         <tbody>
           {applications.map((app) => (
             <tr key={app.id}>
-
               <td>{app.service?.name ?? "N/A"}</td>
+              <td>{app.service?.department?.name ?? "-"}</td>
               <td>{app.status ?? "-"}</td>
-
               <td>
                 {app.documents && app.documents.length > 0
                   ? app.documents.map((doc) => (
-                    <div key={doc.id}>
-                      <a
-                        href={`http://localhost:5000/${doc.filePath}`}
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        {doc.fileName}
-                      </a>
-                    </div>
-                  ))
+                      <div key={doc.id}>
+                        <a
+                          href={`http://localhost:5000/${doc.filePath}`}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          {doc.fileName}
+                        </a>
+                      </div>
+                    ))
                   : "-"}
               </td>
               <td>{new Date(app.appliedOn).toLocaleString()}</td>
@@ -97,7 +95,7 @@ const ApplicationHistory = ({ refreshTrigger }) => {
                   : "-"}
               </td>
               <td>{app.officer?.name ?? "-"}</td>
-              <td>{app.remarks}</td>
+              <td>{app.remarks ?? "-"}</td>
             </tr>
           ))}
         </tbody>

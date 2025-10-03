@@ -1,24 +1,28 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany, ManyToOne, JoinColumn } from 'typeorm';
 import { Application } from '../application/application.entity';
+import { Department } from '../department/department.entity';
 
 @Entity({ name: 'services' })
 export class Service {
   @PrimaryGeneratedColumn()
-  id: number; 
+  id: number;
 
   @Column({ name: 'department_id' })
   department_id: number;
 
   @Column({ type: 'varchar', nullable: false, default: 'Default Service Name' })
-name: string;
-
+  name: string;
 
   @Column({ nullable: true })
   description?: string;
 
   @Column({ type: 'numeric', precision: 10, scale: 2, nullable: false, default: 0 })
-fee: number;
+  fee: number;
 
+  // ✅ Link to Department
+  @ManyToOne(() => Department)
+  @JoinColumn({ name: 'department_id' })
+  department: Department;
 
   @OneToMany(() => Application, (application) => application.service)
   applications: Application[];

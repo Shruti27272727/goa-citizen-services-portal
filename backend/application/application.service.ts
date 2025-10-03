@@ -8,7 +8,7 @@ import { Document } from '../documents/documents.entity';
 import { PaymentsService } from '../payments/payments.service';
 import { Officer } from '../officers/officer.entity';
 import { join } from 'path';
-import { existsSync, mkdirSync } from 'fs';
+import { existsSync, mkdirSync, writeFileSync } from 'fs';
 
 @Injectable()
 export class ApplicationService {
@@ -31,9 +31,7 @@ export class ApplicationService {
     private readonly paymentsService: PaymentsService,
   ) {}
 
-  /**
-   * Create application + upload documents + create payment
-   */
+  // Create application with documents and payment
   async createWithDocument(
     citizenId: number,
     serviceId: number | string,
@@ -42,11 +40,14 @@ export class ApplicationService {
     const citizen = await this.citizenRepo.findOne({ where: { id: citizenId } });
     if (!citizen) throw new NotFoundException('Citizen not found');
 
-    const serviceIdNum = Number(serviceId);
-    if (isNaN(serviceIdNum) || serviceIdNum <= 0)
+    const serviceNum = Number(serviceId);
+    if (isNaN(serviceNum) || serviceNum <= 0)
       throw new BadRequestException('Invalid serviceId');
 
-    const service = await this.serviceRepo.findOne({ where: { id: serviceIdNum } });
+    const service = await this.serviceRepo.findOne({
+      where: { id: serviceNum },
+      relations: ['department'],
+    });
     if (!service) throw new NotFoundException('Service not found');
 
     const application = this.applicationRepo.create({
@@ -56,31 +57,33 @@ export class ApplicationService {
     });
     const savedApp = await this.applicationRepo.save(application);
 
-    // ensure upload dir exists
+    // Upload documents
     const uploadDir = join(__dirname, '../../uploads');
     if (!existsSync(uploadDir)) mkdirSync(uploadDir, { recursive: true });
 
-    // save docs
     for (const file of files) {
+      const filePath = join(uploadDir, file.originalname);
+      writeFileSync(filePath, file.buffer);
+
       const doc = this.documentRepo.create({
         fileName: file.originalname,
-        filePath: file.path || file.filename,
+        filePath,
         application: savedApp,
       });
       await this.documentRepo.save(doc);
     }
 
-    // payment
-    const amount = service.fee || 1000;
+    // Payment
+    const amount = service.fee || 100; // Default fee
     const payment = await this.paymentsService.createPayment(savedApp.id, amount);
 
-    const applicationWithRelations = await this.applicationRepo.findOne({
+    const appWithRelations = await this.applicationRepo.findOne({
       where: { id: savedApp.id },
-      relations: ['service', 'documents', 'officer'],
+      relations: ['service', 'service.department', 'documents', 'officer', 'citizen'],
     });
 
     return {
-      application: applicationWithRelations,
+      application: appWithRelations,
       payment: {
         id: payment.id,
         order: {
@@ -92,144 +95,110 @@ export class ApplicationService {
     };
   }
 
-  /**
-   * Citizen application history
-   */
   async getApplicationsByCitizen(citizenId: number) {
-    if (!citizenId) throw new BadRequestException('Citizen ID is required');
-
     return this.applicationRepo.find({
       where: { citizen: { id: citizenId } },
-      relations: ['service', 'documents', 'officer'],
+      relations: ['service', 'service.department', 'documents', 'officer'],
       order: { appliedOn: 'DESC' },
     });
   }
 
-  async getUserHistory(citizenId: number): Promise<Application[]> {
-    return this.getApplicationsByCitizen(citizenId);
+  async getUserHistory(citizenId: number) {
+    return this.applicationRepo.find({
+      where: { citizen: { id: citizenId } },
+      relations: ['service', 'service.department', 'documents', 'officer'],
+      order: { appliedOn: 'DESC' },
+    });
   }
 
-  /**
-   * Officer/Admin views
-   */
-  async getPendingApplications(): Promise<Application[]> {
+  async getPendingApplications() {
     return this.applicationRepo.find({
       where: { status: ApplicationStatus.PENDING },
-      relations: ['service', 'documents', 'officer'],
+      relations: ['service', 'service.department', 'documents', 'officer', 'citizen'],
       order: { appliedOn: 'DESC' },
     });
   }
 
-  async getAllApplications(): Promise<Application[]> {
+  async getAllApplications() {
     return this.applicationRepo.find({
-      relations: ['service', 'documents', 'officer'],
+      relations: ['service', 'service.department', 'documents', 'officer', 'citizen'],
       order: { appliedOn: 'DESC' },
     });
   }
 
-  /**
-   * Dashboard stats (counts by status)
-   */
-  async getStatus(): Promise<any> {
-    const raw = await this.applicationRepo.query(`
-      SELECT status, COUNT(*)::int AS total
-      FROM applications
-      GROUP BY status;
-    `);
-
-    const result = {
-      total: 0,
-      pending: 0,
-      approved: 0,
-      rejected: 0,
-    };
-
-    for (const row of raw) {
-      const key = row.status.toLowerCase();
-      result[key] = Number(row.total);
-      result.total += Number(row.total);
-    }
-
-    return result;
-  }
-
-  /**
-   * Admin dashboard (status counts + revenue per department)
-   */
+  // Dashboard statistics and revenue
   async getDashboardStatus() {
-    // 1. Status counts
+    // Application counts
     const rawStatus = await this.applicationRepo.query(`
       SELECT status, COUNT(*) AS total
       FROM applications
-      GROUP BY status;
+      GROUP BY status
     `);
 
-    const stats = {
-      total: 0,
-      pending: 0,
-      approved: 0,
-      rejected: 0,
-    };
-
+    const stats = { total: 0, pending: 0, approved: 0, rejected: 0 };
     rawStatus.forEach((row: any) => {
-      const statusName = row.status.toLowerCase();
+      const key = row.status.toLowerCase();
       const count = parseInt(row.total, 10);
-
       stats.total += count;
-      if (statusName === 'pending') stats.pending = count;
-      if (statusName === 'approved') stats.approved = count;
-      if (statusName === 'rejected') stats.rejected = count;
+      if (key === 'pending') stats.pending = count;
+      if (key === 'approved') stats.approved = count;
+      if (key === 'rejected') stats.rejected = count;
     });
 
-    // 2. Revenue per department (JOIN via service → department)
+    // Revenue per department with LEFT JOIN to always include all departments
     const rawRevenue = await this.applicationRepo.query(`
-      SELECT d.name AS department, SUM(p.amount) AS revenue
-      FROM payments p
-      INNER JOIN applications a ON a.id = p.application_id
-      INNER JOIN services s ON s.id = a.service_id
-      INNER JOIN departments d ON d.id = s.department_id
-      GROUP BY d.name;
+      SELECT d.name AS department, COALESCE(SUM(p.amount), 0) AS revenue
+      FROM departments d
+      LEFT JOIN services s ON s.department_id = d.id
+      LEFT JOIN applications a ON a.service_id = s.id
+      LEFT JOIN payments p ON p.application_id = a.id
+      WHERE d.name IN ('Revenue', 'Panchayat', 'Transport')
+      GROUP BY d.name
     `);
 
-    const revenueData: Record<string, number> = {};
+    const revenueData: Record<string, number> = {
+      Revenue: 0,
+      Panchayat: 0,
+      Transport: 0,
+    };
     rawRevenue.forEach((row: any) => {
-      revenueData[row.department] = parseInt(row.revenue, 10);
+      const dept = row.department;
+      const rev = parseInt(row.revenue, 10);
+      revenueData[dept] = rev;
     });
 
     return { stats, revenueData };
   }
 
-  /**
-   * Officer actions
-   */
-  async approveApplication(applicationId: number, officerId: number, remarks: string): Promise<Application> {
-    return this.changeApplicationStatus(applicationId, officerId, ApplicationStatus.APPROVED, remarks);
+  // Approve / Reject applications
+  async approveApplication(appId: number, officerId: number, remarks: string) {
+    return this.changeApplicationStatus(appId, officerId, ApplicationStatus.APPROVED, remarks);
   }
 
-  async rejectApplication(applicationId: number, officerId: number, remarks: string): Promise<Application> {
-    return this.changeApplicationStatus(applicationId, officerId, ApplicationStatus.REJECTED, remarks);
+  async rejectApplication(appId: number, officerId: number, remarks: string) {
+    return this.changeApplicationStatus(appId, officerId, ApplicationStatus.REJECTED, remarks);
   }
 
   private async changeApplicationStatus(
-    applicationId: number,
+    appId: number,
     officerId: number,
     status: ApplicationStatus,
     remarks: string,
-  ): Promise<Application> {
-    const application = await this.applicationRepo.findOne({
-      where: { id: applicationId },
-      relations: ['officer', 'service', 'documents', 'citizen'],
+  ) {
+    const app = await this.applicationRepo.findOne({
+      where: { id: appId },
+      relations: ['officer', 'service', 'service.department', 'documents', 'citizen'],
     });
-    if (!application) throw new NotFoundException('Application not found');
+    if (!app) throw new NotFoundException('Application not found');
 
     const officer = await this.officerRepo.findOne({ where: { id: officerId } });
     if (!officer) throw new NotFoundException('Officer not found');
 
-    application.status = status;
-    application.completedOn = new Date();
-    application.officer = officer;
-    application.remarks = remarks;
+    app.status = status;
+    app.completedOn = new Date();
+    app.officer = officer;
+    app.remarks = remarks;
 
-    return await this.applicationRepo.save(application);
+    return this.applicationRepo.save(app);
   }
 }

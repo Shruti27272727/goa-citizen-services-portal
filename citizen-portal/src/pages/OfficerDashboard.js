@@ -1,16 +1,16 @@
 import React, { useEffect, useState, useContext } from "react";
 import axios from "axios";
 import { AuthContext } from "../context/AuthContext";
+
 const OfficerDashboard = ({ refreshTrigger }) => {
   const { user } = useContext(AuthContext);
   const [applications, setApplications] = useState([]);
-  const [remarks, setRemarks] = useState("");
+  const [remarks, setRemarks] = useState({}); // store remarks per application
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState({});
 
   useEffect(() => {
     const fetchApplications = async () => {
-
       try {
         const res = await axios.get(
           "http://localhost:5000/applications/pending-applications",
@@ -32,12 +32,14 @@ const OfficerDashboard = ({ refreshTrigger }) => {
     try {
       await axios.post(
         `http://localhost:5000/applications/${action}/${id}/${user.id}`,
-        { remark: remarks },
+        { remarks: remarks[id] || "" }, // send the remark for this specific app
         { headers: { Authorization: `Bearer ${user.token}` } }
       );
 
       alert(`Application ${action}ed successfully!`);
       setApplications(applications.filter((app) => app.id !== id));
+
+      // Remove the remark for this application
       setRemarks((prev) => {
         const copy = { ...prev };
         delete copy[id];
@@ -74,7 +76,7 @@ const OfficerDashboard = ({ refreshTrigger }) => {
               }}
             >
               <h3>{app.applicantName}</h3>
-              <p>Service: {(app.service?.name)}</p>
+              <p>Service: {app.service?.name}</p>
               <p>
                 Status:{" "}
                 <span
@@ -83,8 +85,8 @@ const OfficerDashboard = ({ refreshTrigger }) => {
                       app.status === "approved"
                         ? "green"
                         : app.status === "rejected"
-                          ? "red"
-                          : "orange",
+                        ? "red"
+                        : "orange",
                     fontWeight: "bold",
                   }}
                 >
@@ -96,8 +98,10 @@ const OfficerDashboard = ({ refreshTrigger }) => {
                 Remark:
                 <input
                   type="text"
-                  value={remarks}
-                  onChange={(e) => setRemarks(e.target.value)}
+                  value={remarks[app.id] || ""}
+                  onChange={(e) =>
+                    setRemarks((prev) => ({ ...prev, [app.id]: e.target.value }))
+                  }
                   style={{ width: "100%", marginTop: "5px", marginBottom: "10px" }}
                 />
               </label>
