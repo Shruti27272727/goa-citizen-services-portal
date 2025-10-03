@@ -51,10 +51,11 @@ export class ApplicationController {
   }
 
  
-@Get(' getDashboardStatus')
-  async getDashboardStatus(){
-    return this.appService. getDashboardStatus();
-  }
+@Get('dashboard')
+async getDashboardStatus() {
+  return this.appService.getDashboardStatus();
+}
+
 
    
 

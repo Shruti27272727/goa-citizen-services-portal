@@ -32,7 +32,7 @@ const AdminDashboard = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/applications/status");
+        const res = await axios.get("http://localhost:5000/applications/dashboard");
         const data = res.data;
 console.log('data',data )
         // Set stats safely
@@ -51,7 +51,7 @@ console.log('data',data )
         ];
         setStatusData(pieData);
 
-        // Prepare revenue data for BarChart
+  
         const revenueArr = Object.entries(data?.revenueData || {}).map(
           ([dept, value]) => ({ department: dept, revenue: value })
         );

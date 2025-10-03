@@ -5,40 +5,32 @@ import { DataSource } from 'typeorm';
 
 @Injectable()
 export class DatabaseSetupService implements OnModuleInit {
- constructor(
-   @InjectDataSource()
-   private readonly dataSource: DataSource,
- ) {}
+  constructor(
+    @InjectDataSource()
+    private readonly dataSource: DataSource,
+  ) { }
 
 
- async onModuleInit() {
-   console.log('🚀 Starting database setup...');
+  async onModuleInit() {
+
+    try {
+      
+      if (!this.dataSource.isInitialized) {
+        await this.dataSource.initialize();
+      }
+
+      const queryRunner = this.dataSource.createQueryRunner();
 
 
-   try {
-     // Wait for database connection
-     if (!this.dataSource.isInitialized) {
-       await this.dataSource.initialize();
-     }
+      try {
 
-
-     console.log('✅ Database connection established');
-
-
-     // Check if tables exist and create them if needed
-     const queryRunner = this.dataSource.createQueryRunner();
-
-
-     try {
-       // Create departments table if it doesn't exist
-       await queryRunner.query(`
+        await queryRunner.query(`
          CREATE TABLE IF NOT EXISTS departments (
            id SERIAL PRIMARY KEY,
            name TEXT[] NOT NULL
          )
        `);
-       console.log('✅ Departments table ready');
-  await queryRunner.query(`
+        await queryRunner.query(`
 CREATE TABLE IF NOT EXISTS Citizens (
     id SERIAL PRIMARY KEY,
     email VARCHAR(255) UNIQUE NOT NULL,
@@ -104,9 +96,7 @@ CREATE TABLE IF NOT EXISTS Payments (
 );
 `);
 
-
-       // Create services table if it doesn't exist
-       await queryRunner.query(`
+        await queryRunner.query(`
          CREATE TABLE IF NOT EXISTS services (
            id SERIAL PRIMARY KEY,
            department_id INTEGER NOT NULL,
@@ -115,60 +105,44 @@ CREATE TABLE IF NOT EXISTS Payments (
            fee DECIMAL(10,2) NOT NULL DEFAULT 0.00
          )
        `);
-       console.log('✅ Services table ready');
 
+        const departmentCount = await queryRunner.query('SELECT COUNT(*) as count FROM departments');
+        if (parseInt(departmentCount[0].count) === 0) {
 
-       // Insert default departments if table is empty
-       const departmentCount = await queryRunner.query('SELECT COUNT(*) as count FROM departments');
-       if (parseInt(departmentCount[0].count) === 0) {
-         console.log('📝 Inserting default departments...');
-         await queryRunner.query(`
+          await queryRunner.query(`
            INSERT INTO departments VALUES
            (1,'Revenue') ,
            (2,'Panchayat'),
            (3,'Transport')       
          `);
-         console.log('✅ Default departments inserted');
-       }
 
+        }
 
-       // Insert default services if table is empty
-       const serviceCount = await queryRunner.query('SELECT COUNT(*) as count FROM services');
-       if (parseInt(serviceCount[0].count) === 0) {
-         console.log('📝 Inserting default services...');
-         await queryRunner.query(`
+        const serviceCount = await queryRunner.query('SELECT COUNT(*) as count FROM services');
+        if (parseInt(serviceCount[0].count) === 0) {
+          console.log(' Inserting default services...');
+          await queryRunner.query(`
            INSERT INTO services (department_id, name, description, fee) VALUES
            (1, 'Residence certificate', 'Apply for residence certificate', 200.00),
            (2, 'Birth Certificate', 'Apply for birth certificate', 50.00),
            (3, 'Aadhaar Card', 'Apply for aadhar card', 100.00)
            
          `);
-         console.log('✅ Default services inserted');
-       }
+
+        }
+
+        const finalDeptCount = await queryRunner.query('SELECT COUNT(*) as count FROM departments');
+        const finalServiceCount = await queryRunner.query('SELECT COUNT(*) as count FROM services');
 
 
-       // Show summary
-       const finalDeptCount = await queryRunner.query('SELECT COUNT(*) as count FROM departments');
-       const finalServiceCount = await queryRunner.query('SELECT COUNT(*) as count FROM services');
+      } finally {
+        await queryRunner.release();
+      }
 
 
-       console.log('\n📊 Database Setup Summary:');
-       console.log(`   • Departments: ${finalDeptCount[0].count}`);
-       console.log(`   • Services: ${finalServiceCount[0].count}`);
+    } catch (error) {
+      console.error(' Database setup failed:', error);
 
-
-       console.log('🎉 Database setup completed successfully!');
-
-
-     } finally {
-       await queryRunner.release();
-     }
-
-
-   } catch (error) {
-     console.error('❌ Database setup failed:', error);
-     // Don't exit the process, just log the error
-     // This allows the application to continue running even if setup fails
-   }
- }
+    }
+  }
 }
