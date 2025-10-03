@@ -26,12 +26,12 @@ const Login = () => {
 
       alert("Login successful!");
 
-      // Navigate based on role
+      
       const role = userData.role?.toLowerCase() || "citizen";
       if (role === "citizen") navigate("/apply-service");
       else if (role === "officer") navigate("/officer-dashboard");
       else if (role === "admin") navigate("/admin-dashboard");
-      else navigate("/"); // fallback
+      else navigate("/"); 
 
     } catch (err) {
       console.error("Login error:", err);

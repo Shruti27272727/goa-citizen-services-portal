@@ -18,7 +18,7 @@ export class DatabaseSetupService implements OnModuleInit {
       const queryRunner = this.dataSource.createQueryRunner();
 
       try {
-        // ✅ Departments table
+        // --- Departments ---
         await queryRunner.query(`
           CREATE TABLE IF NOT EXISTS departments (
             id SERIAL PRIMARY KEY,
@@ -26,7 +26,7 @@ export class DatabaseSetupService implements OnModuleInit {
           )
         `);
 
-        // ✅ Citizens table
+        // --- Citizens ---
         await queryRunner.query(`
           CREATE TABLE IF NOT EXISTS citizens (
             id SERIAL PRIMARY KEY,
@@ -36,7 +36,7 @@ export class DatabaseSetupService implements OnModuleInit {
           )
         `);
 
-        // ✅ Roles table
+        // --- Roles ---
         await queryRunner.query(`
           CREATE TABLE IF NOT EXISTS roles (
             id SERIAL PRIMARY KEY,
@@ -45,7 +45,7 @@ export class DatabaseSetupService implements OnModuleInit {
           )
         `);
 
-        // ✅ Aadhaar table
+        // --- Aadhaar ---
         await queryRunner.query(`
           CREATE TABLE IF NOT EXISTS aadhaar (
             id SERIAL PRIMARY KEY,
@@ -56,7 +56,7 @@ export class DatabaseSetupService implements OnModuleInit {
           )
         `);
 
-        // ✅ Addresses table
+        // --- Addresses ---
         await queryRunner.query(`
           CREATE TABLE IF NOT EXISTS addresses (
             id SERIAL PRIMARY KEY,
@@ -68,7 +68,18 @@ export class DatabaseSetupService implements OnModuleInit {
           )
         `);
 
-        // ✅ Applications table
+        // --- Services ---
+        await queryRunner.query(`
+          CREATE TABLE IF NOT EXISTS services (
+            id SERIAL PRIMARY KEY,
+            department_id INT NOT NULL REFERENCES departments(id),
+            name VARCHAR(255) NOT NULL DEFAULT 'Default Service Name',
+            description TEXT,
+            fee DECIMAL(10,2) NOT NULL DEFAULT 0.00
+          )
+        `);
+
+        // --- Applications ---
         await queryRunner.query(`
           CREATE TABLE IF NOT EXISTS applications (
             id SERIAL PRIMARY KEY,
@@ -82,7 +93,7 @@ export class DatabaseSetupService implements OnModuleInit {
           )
         `);
 
-        // ✅ Documents table
+        // --- Documents ---
         await queryRunner.query(`
           CREATE TABLE IF NOT EXISTS documents (
             id SERIAL PRIMARY KEY,
@@ -92,7 +103,7 @@ export class DatabaseSetupService implements OnModuleInit {
           )
         `);
 
-        // ✅ Payments table
+        // --- Payments ---
         await queryRunner.query(`
           CREATE TABLE IF NOT EXISTS payments (
             id SERIAL PRIMARY KEY,
@@ -105,18 +116,7 @@ export class DatabaseSetupService implements OnModuleInit {
           )
         `);
 
-        // ✅ Services table
-        await queryRunner.query(`
-          CREATE TABLE IF NOT EXISTS services (
-            id SERIAL PRIMARY KEY,
-            department_id INT NOT NULL REFERENCES departments(id),
-            name VARCHAR(255) NOT NULL DEFAULT 'Default Service Name',
-            description TEXT,
-            fee DECIMAL(10,2) NOT NULL DEFAULT 0.00
-          )
-        `);
-
-        // ✅ Seed departments if empty
+        // --- Insert default Departments ---
         const departmentCount = await queryRunner.query('SELECT COUNT(*) as count FROM departments');
         if (parseInt(departmentCount[0].count) === 0) {
           await queryRunner.query(`
@@ -127,7 +127,7 @@ export class DatabaseSetupService implements OnModuleInit {
           `);
         }
 
-        // ✅ Seed services if empty
+        // --- Insert default Services ---
         const serviceCount = await queryRunner.query('SELECT COUNT(*) as count FROM services');
         if (parseInt(serviceCount[0].count) === 0) {
           await queryRunner.query(`
@@ -137,6 +137,12 @@ export class DatabaseSetupService implements OnModuleInit {
               (2, 'Aadhaar Card', 'Apply for Aadhaar card', 100.00),
               (3, 'Driving License', 'Apply for driving license', 300.00)
           `);
+        }
+
+        // --- Optional: Log about Roles ---
+        const roleCount = await queryRunner.query('SELECT COUNT(*) as count FROM roles');
+        if (parseInt(roleCount[0].count) === 0) {
+          console.log('Roles table is empty. Roles can be assigned to citizens/officers/admins manually.');
         }
 
       } finally {

@@ -5,7 +5,7 @@ import { AuthContext } from "../context/AuthContext";
 const OfficerDashboard = ({ refreshTrigger }) => {
   const { user } = useContext(AuthContext);
   const [applications, setApplications] = useState([]);
-  const [remarks, setRemarks] = useState({}); // store remarks per application
+  const [remarks, setRemarks] = useState({});
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState({});
 
@@ -36,7 +36,7 @@ const OfficerDashboard = ({ refreshTrigger }) => {
         { headers: { Authorization: `Bearer ${user.token}` } }
       );
 
-      alert(`Application ${action}ed successfully!`);
+      alert(`Application ${action}d successfully!`);
       setApplications(applications.filter((app) => app.id !== id));
 
       setRemarks((prev) => {
@@ -52,7 +52,7 @@ const OfficerDashboard = ({ refreshTrigger }) => {
     }
   };
 
-  // ✅ New: Save remark without changing status
+
   const handleSaveRemark = async (id) => {
     if (!remarks[id] || remarks[id].trim() === "") return alert("Remark cannot be empty");
 

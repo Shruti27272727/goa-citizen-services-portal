@@ -42,7 +42,7 @@ const ApplicationHistory = ({ refreshTrigger }) => {
     };
 
     fetchApplications();
-  }, [user, refreshTrigger]); // refreshTrigger can be incremented whenever a remark is added
+  }, [user, refreshTrigger]); 
 
   if (loading) return <p>Loading application history...</p>;
   if (error) return <p style={{ color: "red" }}>{error}</p>;
