@@ -98,4 +98,20 @@ export class AuthService {
       role, 
     };
   }
+
+ async getCitizenByEmail(email: string) {
+    const citizen = await this.citizenRepository.findOne({ where: { email } });
+    if (!citizen) {
+      throw new BadRequestException('Citizen not found');
+    }
+    return {
+      id: citizen.id,
+      email: citizen.email,
+      phone: citizen.phone,
+      role: citizen.role,
+      createdAt: citizen.createdAt,
+    };
+  }
+
+
 }

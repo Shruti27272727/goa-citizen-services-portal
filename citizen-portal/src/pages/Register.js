@@ -8,7 +8,7 @@ import { AuthContext } from "../context/AuthContext";
 
 const Register = () => {
   const [name, setName] = useState("");
-  const [aadhaar, setAadhaar] = useState("");
+  const [aadhaar, setContact] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const { login } = useContext(AuthContext);
@@ -44,7 +44,7 @@ const Register = () => {
       <Navbar />
       <h2>Citizen Registration</h2>
       <Input label="Name" value={name} onChange={(e) => setName(e.target.value)} />
-      <Input label="Aadhaar" value={aadhaar} onChange={(e) => setAadhaar(e.target.value)} />
+      <Input label="Aadhaar/Phone" value={aadhaar} onChange={(e) => setContact(e.target.value)} />
       <Input label="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
       <Input
         label="Password"

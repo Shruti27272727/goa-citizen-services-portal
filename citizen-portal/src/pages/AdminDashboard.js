@@ -97,16 +97,6 @@ const AdminDashboard = () => {
         </ul>
       </section>
 
-      {/* --- User Counts --- */}
-      <section style={{ marginBottom: "30px" }}>
-        <h2>User Counts</h2>
-        <ul>
-          <li>Total Citizens: {userCounts.citizens}</li>
-          <li>Total Officers: {userCounts.officers}</li>
-        </ul>
-      </section>
-
-      {/* --- Application Status PieChart --- */}
       {statusData.length > 0 && (
         <section style={{ marginBottom: "30px" }}>
           <h2>Application Status Distribution</h2>
@@ -153,14 +143,7 @@ const AdminDashboard = () => {
         </section>
       )}
 
-      {/* --- Applications Quick Access --- */}
-      <section style={{ marginBottom: "30px" }}>
-        <h2>Applications</h2>
-        <button onClick={() => alert("View all applications")}>View All Applications</button>
-        <button onClick={() => alert("Filter: Pending")}>Pending Applications</button>
-        <button onClick={() => alert("Filter: Approved")}>Approved Applications</button>
-        <button onClick={() => alert("Export Applications Report")}>Export Report</button>
-      </section>
+      
     </div>
   );
 };

@@ -1,4 +1,4 @@
-import { Controller, Post, Body, BadRequestException } from '@nestjs/common';
+import { Controller, Post, Get, Query, Body, BadRequestException } from '@nestjs/common';
 import { AuthService } from './auth.service';
 
 interface RegisterDto {
@@ -48,4 +48,14 @@ export class AuthController {
 
     return this.authService.login(email, password);
   }
+
+
+ @Get('citizen')
+  async getCitizen(@Query('email') email: string) {
+    if (!email) {
+      throw new BadRequestException('Email is required');
+    }
+    return this.authService.getCitizenByEmail(email);
+  }
+
 }

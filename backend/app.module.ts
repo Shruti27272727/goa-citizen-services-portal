@@ -5,7 +5,8 @@ import { JwtModule } from '@nestjs/jwt';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
- import { DatabaseSetupService } from './database-setup.service';
+import { DatabaseSetupService } from './database-setup.service';
+
 import { Citizen } from './citizen/citizen.entity';
 import { Aadhar } from './aadhar/aadhar.entity';
 import { Address } from './addresses/addresses.entity';
