@@ -23,7 +23,7 @@ function App() {
         {/* Citizen Pages */}
         <Route path="/apply-service" element={<ApplyService />} />
         <Route path="/application-history" element={<ApplicationHistory />} />
-       <Route path="/citizen-profile" element={<CitizenProfile />} />  {/* <-- new route */}
+        <Route path="/profile" element={<CitizenProfile />} /> {/* <-- new route */}
 
         {/* Officer Dashboard */}
         <Route path="/officer-dashboard" element={<OfficerDashboard />} />

@@ -5,7 +5,7 @@ import { JwtModule } from '@nestjs/jwt';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { DatabaseSetupService } from './database-setup.service';
+
 
 import { Citizen } from './citizen/citizen.entity';
 import { Aadhar } from './aadhar/aadhar.entity';
@@ -59,7 +59,7 @@ import { AuthModule } from './auth/auth.module';
         ],
         logging: ['error', 'warn', 'query'],
         synchronize: false, 
-        migrationsRun: true,
+       // migrationsRun: true,
       }),
     }),
 
@@ -87,6 +87,6 @@ import { AuthModule } from './auth/auth.module';
     AuthModule,
   ],
   controllers: [AppController],
-  providers: [AppService, DatabaseSetupService],
+  providers: [AppService],
 })
 export class AppModule {}

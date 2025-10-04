@@ -1,11 +1,13 @@
-import { Controller, Post, Get, Query, Body, BadRequestException } from '@nestjs/common';
+import { Controller, Post, Get, Body, Query, BadRequestException } from '@nestjs/common';
 import { AuthService } from './auth.service';
 
 interface RegisterDto {
+  name: string;
   email: string;
-  phone?: string;
-  aadhaar?: string;
+  phone: string;
   password: string;
+  aadhaar?: string;
+  address?: string;
 }
 
 interface LoginDto {
@@ -17,45 +19,21 @@ interface LoginDto {
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
- 
   @Post('register')
   async register(@Body() body: RegisterDto) {
-    console.log('Received registration body:', body);
-
-    const { email, phone, aadhaar, password } = body;
-
-    
-    if (!email || !password || (!phone && !aadhaar)) {
-      throw new BadRequestException('Email, phone or Aadhaar, and password are required');
-    }
-
-    const contact = phone ?? aadhaar!; 
-
-    return this.authService.register(email, contact, password);
+    const { name, email, phone, password, aadhaar, address } = body;
+    return this.authService.register(name, email, phone, password, aadhaar, address);
   }
 
-  
   @Post('login')
   async login(@Body() body: LoginDto) {
-    console.log('Received login body:', body);
-
     const { email, password } = body;
-
-    
-    if (!email || !password) {
-      throw new BadRequestException('Email and password are required');
-    }
-
     return this.authService.login(email, password);
   }
 
-
- @Get('citizen')
+  @Get('citizen')
   async getCitizen(@Query('email') email: string) {
-    if (!email) {
-      throw new BadRequestException('Email is required');
-    }
+    if (!email) throw new BadRequestException('Email is required');
     return this.authService.getCitizenByEmail(email);
   }
-
 }

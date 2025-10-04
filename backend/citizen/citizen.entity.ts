@@ -6,15 +6,25 @@ export class Citizen {
   @PrimaryGeneratedColumn({ type: 'integer', name: 'id' })
   id: number;
 
+  @Column({ type: 'text', nullable: false })
+  name: string;
+
   @Column({ type: 'text', nullable: false, unique: true })
   email: string;
 
   @Column({ type: 'text', nullable: false })
   phone: string;
 
-  @Column({ type: 'text', nullable: false }) 
+  @Column({ type: 'text', nullable: true, unique: true })
+  aadhaar: string;
+
+  @Column({ type: 'text', nullable: true })
+  address: string;
+
+  @Column({ type: 'text', nullable: false })
   password: string;
-   @Column({ type: 'varchar', default: 'citizen' })  
+
+  @Column({ type: 'varchar', default: 'citizen' })
   role: 'citizen' | 'admin';
 
   @OneToMany(() => Application, (application) => application.citizen)

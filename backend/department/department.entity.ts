@@ -5,7 +5,6 @@ export class Department {
   @PrimaryGeneratedColumn({ type: 'integer', name: 'id' })
   id: number;
 
-  
-  @Column("text", { array: true })
-  name: string[];
+  @Column()
+  name: string;
 }
