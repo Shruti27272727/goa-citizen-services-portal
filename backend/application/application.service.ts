@@ -74,7 +74,7 @@ export class ApplicationService {
     }
 
     // Payment
-    const amount = service.fee || 100; // Default fee
+    const amount = Number(service.fee) || 100;
     const payment = await this.paymentsService.createPayment(savedApp.id, amount);
 
     const appWithRelations = await this.applicationRepo.findOne({

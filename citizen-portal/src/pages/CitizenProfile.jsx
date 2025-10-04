@@ -12,7 +12,7 @@ const CitizenProfile = () => {
     const fetchProfile = async () => {
       try {
         // Use stored email or token to fetch profile
-        const res = await axios.get(`/auth/citizen?email=${user.email}`, {
+        const res = await axios.get(`http://localhost:5000/auth/citizen?email=${user.email}`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`,
           },

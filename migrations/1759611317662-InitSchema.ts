@@ -8,7 +8,6 @@ export class InitSchema1759611317662 implements MigrationInterface {
         await queryRunner.query(`ALTER TABLE "applications" DROP CONSTRAINT "FK_d96b4020e5321e51e7701f4b6c8"`);
         await queryRunner.query(`CREATE SEQUENCE IF NOT EXISTS "citizens_id_seq" OWNED BY "citizens"."id"`);
         await queryRunner.query(`ALTER TABLE "citizens" ALTER COLUMN "id" SET DEFAULT nextval('"citizens_id_seq"')`);
-        await queryRunner.query(`ALTER TABLE "citizens" ALTER COLUMN "id" DROP DEFAULT`);
         await queryRunner.query(`ALTER TABLE "services" ADD CONSTRAINT "FK_fe8dcab94e4095af071399c6523" FOREIGN KEY ("department_id") REFERENCES "departments"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
         await queryRunner.query(`ALTER TABLE "applications" ADD CONSTRAINT "FK_d96b4020e5321e51e7701f4b6c8" FOREIGN KEY ("citizen_id") REFERENCES "citizens"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
     }
