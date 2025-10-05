@@ -64,11 +64,15 @@ async function seed() {
 
 
   if (!admin) {
-    const newadmin = [{
-      name: 'Admin1', email: 'admin@gmail.com', phone: '21631231', password: '$2b$10$GheT4LjzP4xDmUX6v8stU.pQf5rFzoa09DQugy5m2U1WAkavdT32G'
-    }
-    ]
-    await citizenRepo.save(newadmin);
+
+    const admin = citizenRepo.create({
+      name: 'Admin1',
+      email: 'admin@gmail.com',
+      phone: '21631231',
+      password: '$2b$10$GheT4LjzP4xDmUX6v8stU.pQf5rFzoa09DQugy5m2U1WAkavdT32G',
+      role: 'admin',
+    });
+    await citizenRepo.save(admin);
 
     const cadmin = await citizenRepo.findOne({ where: { email: "admin@gmail.com" } });
     console.log(cadmin);
