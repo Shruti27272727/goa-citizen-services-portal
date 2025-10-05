@@ -62,40 +62,49 @@ export class AuthService {
     };
   }
 
-  // Login Citizen/Officer
-  async login(email: string, password: string) {
-    if (!email || !password) throw new BadRequestException('Email and password are required');
+ // Login Citizen/Officer
+async login(email: string, password: string) {
+  if (!email || !password)
+    throw new BadRequestException('Email and password are required');
 
-    let user: Citizen | Officer | null = null;
-    let role: 'citizen' | 'officer' | 'admin' = 'citizen';
+  let user: Citizen | Officer | null = null;
+  let role: 'citizen' | 'officer' | 'admin' = 'citizen';
 
-    user = await this.citizenRepository.findOne({ where: { email } });
-    if (user && 'role' in user) {
-      role = user.role === 'admin' ? 'admin' : 'citizen';
-    } else {
-      user = await this.officerRepository.findOne({ where: { email } });
-      if (user) role = 'officer';
-    }
-
-    if (!user) throw new UnauthorizedException('User not found');
-    console.log('password', password);
-    console.log('userpassword', user.password );
-    const validPassword = await bcrypt.compare(password, user.password);
-    if (!validPassword) throw new UnauthorizedException('Incorrect password');
-
-    const token = this.jwtService.sign({
-      id: user.id,
-      email: user.email,
-      role,
-    });
-
-    return {
-      id: user.id,
-      email: user.email,
-      token,
-      role,
-    };
+  // Check in Citizen table first
+  user = await this.citizenRepository.findOne({ where: { email } });
+  if (user && 'role' in user) {
+    role = user.role === 'admin' ? 'admin' : 'citizen';
+  } else {
+    // If not citizen, check Officer table
+    user = await this.officerRepository.findOne({ where: { email } });
+    if (user) role = 'officer';
   }
+
+  if (!user) throw new UnauthorizedException('User not found');
+
+  console.log('Entered password:', password);
+  console.log('Stored password:', user.password);
+
+  const validPassword = await bcrypt.compare(password, user.password);
+  if (!validPassword) throw new UnauthorizedException('Incorrect password');
+
+  const token = this.jwtService.sign({
+    id: user.id,
+    email: user.email,
+    role,
+  });
+
+  // ✅ Return the new structured format
+  return {
+    token,
+    user: {
+      id: user.id,
+      email: user.email,
+      role: role, // or user.role_name if you are using a separate roles table
+    },
+  };
+}
+
 
   // Get citizen by email
   async getCitizenByEmail(email: string) {

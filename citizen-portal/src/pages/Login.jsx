@@ -1,18 +1,38 @@
 import React, { useState } from 'react';
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
 
-  const handleLogin = (e) => {
+  const navigate = useNavigate();
+
+  const handleLogin = async (e) => {
     e.preventDefault();
-    console.log('Login attempted:', email, password);
+    try {
+      const res = await axios.post('/auth/login', { email, password });
+      const user = res.data.user;
+
+      localStorage.setItem('token', res.data.token);
+
+      if (user.role === 'Admin') {
+        navigate('/admin-dashboard');
+      } else {
+        navigate('/profile');
+      }
+    } catch (err) {
+      console.error('Login failed:', err);
+      setError('Invalid email or password');
+    }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100">
       <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md">
         <h1 className="text-2xl font-bold text-center text-blue-700 mb-6">Login</h1>
+        {error && <p className="text-red-500 text-center mb-3">{error}</p>}
         <form onSubmit={handleLogin} className="space-y-5">
           <div>
             <label className="block text-sm font-semibold text-gray-600 mb-1">Email</label>
@@ -50,4 +70,3 @@ const Login = () => {
 };
 
 export default Login;
-
