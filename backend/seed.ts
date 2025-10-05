@@ -2,7 +2,10 @@ import { AppDataSource } from '../typeorm.config';
 import { Department } from './department/department.entity';
 import { Service } from './services/services.entity';
 import { Officer } from './officers/officer.entity';
-import { Any } from 'typeorm';
+import { Citizen } from './citizen/citizen.entity';
+import { Role } from './roles/roles.entity';
+
+
 
 async function seed() {
   await AppDataSource.initialize();
@@ -10,6 +13,8 @@ async function seed() {
   const departmentRepo = AppDataSource.getRepository(Department);
   const serviceRepo = AppDataSource.getRepository(Service);
   const officerRepo = AppDataSource.getRepository(Officer);
+  const citizenRepo = AppDataSource.getRepository(Citizen);
+  const rolesRepo = AppDataSource.getRepository(Role);
 
   // --- Departments ---
   if ((await departmentRepo.count()) === 0) {
@@ -52,6 +57,29 @@ async function seed() {
 
     await officerRepo.save(officers);
     console.log('✅ Officers seeded');
+  }
+
+  //---Admin----
+  const admin = await rolesRepo.findOne({ where: { role_type: "Admin" } });
+
+
+  if (!admin) {
+    const newadmin = [{
+      name: 'Admin1', email: 'admin@gmail.com', phone: '21631231', password: '$2b$10$GheT4LjzP4xDmUX6v8stU.pQf5rFzoa09DQugy5m2U1WAkavdT32G'
+    }
+    ]
+    await citizenRepo.save(newadmin);
+
+    const cadmin = await citizenRepo.findOne({ where: { email: "admin@gmail.com" } });
+    console.log(cadmin);
+    if (cadmin) {
+
+
+      const roleentry = [{
+        id: cadmin.id, role_type: "Admin"
+      }]
+      await rolesRepo.save(roleentry);
+    }
   }
 
   await AppDataSource.destroy();
