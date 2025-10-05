@@ -8,11 +8,13 @@ import { Officer } from '../officers/officer.entity';
 import { Payment } from '../payments/payments.entity';
 import { ApplicationService } from './application.service';
 import { ApplicationController } from './application.controller';
-import { PaymentsService } from '../payments/payments.service';
+import { Department } from '../department/department.entity'; 
+import { Role } from '../roles/roles.entity';
+import { PaymentsService } from 'payments/payments.service';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Application, Citizen, Service, Document, Officer, Payment]),
+    TypeOrmModule.forFeature([Application, Citizen, Service, Document, Officer, Payment , Role , Department]),
   ],
   controllers: [ApplicationController],
   providers: [ApplicationService, PaymentsService],

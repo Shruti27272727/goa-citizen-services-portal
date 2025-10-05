@@ -8,16 +8,16 @@ export class ServicesService {
   constructor(
     @InjectRepository(Service)
     private readonly serviceRepo: Repository<Service>,
-    private readonly dataSource: DataSource, 
-  ) {}
+    private readonly dataSource: DataSource,
+  ) { }
 
-  
+
   async create(data: Partial<Service>): Promise<Service> {
     if (!data.department_id) {
       throw new BadRequestException('department_id is required');
     }
 
-    
+
     const departmentExists = await this.dataSource.query(
       `SELECT id FROM departments WHERE id = $1`,
       [data.department_id],
@@ -55,5 +55,10 @@ export class ServicesService {
   async remove(id: number): Promise<{ deleted: boolean }> {
     const result = await this.serviceRepo.delete(id);
     return { deleted: (result.affected ?? 0) > 0 };
+  }
+  async findByDepartment(departmentId: number): Promise<Service[]> {
+    return await this.serviceRepo.find({
+      where: { department_id: departmentId },
+    });
   }
 }

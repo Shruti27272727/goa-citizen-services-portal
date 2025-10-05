@@ -7,6 +7,8 @@ import { Service } from '../services/services.entity';
 import { Document } from '../documents/documents.entity';
 import { PaymentsService } from '../payments/payments.service';
 import { Officer } from '../officers/officer.entity';
+import { Role } from '../roles/roles.entity';
+import { Department } from '../department/department.entity';
 import { join } from 'path';
 import { existsSync, mkdirSync, writeFileSync } from 'fs';
 
@@ -28,10 +30,17 @@ export class ApplicationService {
     @InjectRepository(Officer)
     private readonly officerRepo: Repository<Officer>,
 
+    @InjectRepository(Role)
+    private readonly roleRepo: Repository<Role>,
+
+    @InjectRepository(Department)
+    private readonly departmentRepo: Repository<Department>,
+
     private readonly paymentsService: PaymentsService,
   ) {}
 
-  /** CREATE APPLICATION WITH DOCUMENTS & PAYMENT **/
+  /** ------------------- APPLICATION METHODS ------------------- **/
+
   async createWithDocument(
     citizenId: number,
     serviceId: number | string,
@@ -95,7 +104,6 @@ export class ApplicationService {
     };
   }
 
-  /** GET APPLICATIONS BY CITIZEN **/
   async getApplicationsByCitizen(citizenId: number) {
     return this.applicationRepo.find({
       where: { citizen: { id: citizenId } },
@@ -104,16 +112,10 @@ export class ApplicationService {
     });
   }
 
-  /** GET USER HISTORY **/
   async getUserHistory(citizenId: number) {
-    return this.applicationRepo.find({
-      where: { citizen: { id: citizenId } },
-      relations: ['service', 'service.department', 'documents', 'officer'],
-      order: { appliedOn: 'DESC' },
-    });
+    return this.getApplicationsByCitizen(citizenId);
   }
 
-  /** GET PENDING APPLICATIONS **/
   async getPendingApplications() {
     return this.applicationRepo.find({
       where: { status: ApplicationStatus.PENDING },
@@ -122,7 +124,6 @@ export class ApplicationService {
     });
   }
 
-  /** GET ALL APPLICATIONS **/
   async getAllApplications() {
     return this.applicationRepo.find({
       relations: ['service', 'service.department', 'documents', 'officer', 'citizen'],
@@ -130,7 +131,6 @@ export class ApplicationService {
     });
   }
 
-  /** DASHBOARD STATS & REVENUE **/
   async getDashboardStatus() {
     const rawStatus = await this.applicationRepo.query(`
       SELECT status, COUNT(*) AS total
@@ -166,7 +166,6 @@ export class ApplicationService {
     return { stats, revenueData };
   }
 
-  /** ADD/UPDATE REMARKS ONLY **/
   async addRemark(applicationId: number, officerId: number, remark: string) {
     if (!remark || remark.trim() === '') {
       throw new BadRequestException('Remark cannot be empty');
@@ -187,7 +186,6 @@ export class ApplicationService {
     return this.applicationRepo.save(app);
   }
 
-  /** APPROVE / REJECT APPLICATION **/
   async approveApplication(appId: number, officerId: number, remarks: string) {
     return this.changeApplicationStatus(appId, officerId, ApplicationStatus.APPROVED, remarks);
   }
@@ -218,4 +216,101 @@ export class ApplicationService {
 
     return this.applicationRepo.save(app);
   }
+
+  /** ------------------- SERVICE MANAGEMENT ------------------- **/
+  async createService(name: string, fee: number, departmentId: number) {
+    const department = await this.departmentRepo.findOne({ where: { id: departmentId } });
+    if (!department) throw new NotFoundException('Department not found');
+
+    const service = this.serviceRepo.create({ name, fee, department });
+    return this.serviceRepo.save(service);
+  }
+
+  async updateService(serviceId: number, data: Partial<Service>) {
+    const service = await this.serviceRepo.findOne({ where: { id: serviceId } });
+    if (!service) throw new NotFoundException('Service not found');
+
+    Object.assign(service, data);
+    return this.serviceRepo.save(service);
+  }
+
+  async deleteService(serviceId: number) {
+    const service = await this.serviceRepo.findOne({ where: { id: serviceId } });
+    if (!service) throw new NotFoundException('Service not found');
+
+    return this.serviceRepo.remove(service);
+  }
+
+  async listServices() {
+    return this.serviceRepo.find({ relations: ['department'] });
+  }
+
+  /** ------------------- DEPARTMENT MANAGEMENT ------------------- **/
+  async createDepartment(name: string) {
+    const dept = this.departmentRepo.create({ name });
+    return this.departmentRepo.save(dept);
+  }
+
+  async updateDepartment(departmentId: number, name: string) {
+    const dept = await this.departmentRepo.findOne({ where: { id: departmentId } });
+    if (!dept) throw new NotFoundException('Department not found');
+
+    dept.name = name;
+    return this.departmentRepo.save(dept);
+  }
+
+  async deleteDepartment(departmentId: number) {
+    const dept = await this.departmentRepo.findOne({ where: { id: departmentId } });
+    if (!dept) throw new NotFoundException('Department not found');
+
+    return this.departmentRepo.remove(dept);
+  }
+
+  async listDepartments() {
+    return this.departmentRepo.find();
+  }
+
+  /** ------------------- OFFICER ASSIGNMENT ------------------- **/
+  async assignOfficer(officerId: number, departmentId: number) {
+    const officer = await this.officerRepo.findOne({ where: { id: officerId } });
+    if (!officer) throw new NotFoundException('Officer not found');
+
+    const department = await this.departmentRepo.findOne({ where: { id: departmentId } });
+    if (!department) throw new NotFoundException('Department not found');
+
+    officer.department_id = department.id;
+    return this.officerRepo.save(officer);
+  }
+
+  /** ------------------- ROLE MANAGEMENT ------------------- **/
+  async createRole(roleType: string) {
+    const role = this.roleRepo.create({ role_type: roleType });
+    return this.roleRepo.save(role);
+  }
+
+async assignRole(userId: number, roleId: number, userType: 'Citizen' | 'Officer') {
+  const role = await this.roleRepo.findOne({ where: { id: roleId } });
+  if (!role) throw new NotFoundException('Role not found');
+
+  if (userType === 'Citizen') {
+    const citizen = await this.citizenRepo.findOne({ where: { id: userId } });
+    if (!citizen) throw new NotFoundException('Citizen not found');
+
+    if (role.role_type !== "citizen" && role.role_type !== "admin") {
+      throw new BadRequestException("Invalid role type");
+    }
+
+    citizen.role = role.role_type; // now type-safe
+    return this.citizenRepo.save(citizen);
+
+  } else {
+    const officer = await this.officerRepo.findOne({ where: { id: userId } });
+    if (!officer) throw new NotFoundException('Officer not found');
+
+    // assign department_id (use proper mapping)
+    officer.department_id = role.id; 
+    return this.officerRepo.save(officer);
+  }
+}
+
 }

@@ -1,21 +1,28 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
 import axios from "axios";
 import RazorpayButton from "../components/RazorpayButton";
 
 const ApplyService = () => {
   const { user } = useContext(AuthContext);
+  const [services, setServices] = useState([]);
   const [serviceId, setServiceId] = useState(null);
   const [files, setFiles] = useState([]);
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const services = [
-    { id: 1, name: "Residence Certificate", fee: 200, department: "Revenue" },
-    { id: 2, name: "Birth Certificate", fee: 50, department: "Panchayat" },
-    { id: 3, name: "Aadhaar Card", fee: 100, department: "Panchayat" },
-    { id: 4, name: "Driving License", fee: 300, department: "Transport" },
-  ];
+  // ---- Fetch services from backend ----
+  useEffect(() => {
+    const fetchServices = async () => {
+      try {
+        const res = await axios.get("http://localhost:5000/applications/services");
+        setServices(res.data || []);
+      } catch (err) {
+        console.error("Failed to fetch services:", err);
+      }
+    };
+    fetchServices();
+  }, []);
 
   const handleFileChange = (e) => setFiles(Array.from(e.target.files));
 
@@ -56,9 +63,7 @@ const ApplyService = () => {
 
   return (
     <div className="min-h-screen bg-blue-500 flex items-center justify-center p-4">
-  <div className="w-full max-w-lg bg-blue-50 p-8 rounded-2xl shadow-lg">
-  
-
+      <div className="w-full max-w-lg bg-blue-50 p-8 rounded-2xl shadow-lg">
         <h1 className="text-2xl font-bold text-blue-700 text-center mb-6">Apply for a Service</h1>
 
         <form onSubmit={handleSubmit} className="space-y-5">
@@ -71,11 +76,15 @@ const ApplyService = () => {
               className="w-full p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none"
             >
               <option value="">--Select a service--</option>
-              {services.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.name} ({s.department}) - ₹{s.fee}
-                </option>
-              ))}
+              {services.length > 0 ? (
+                services.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name} ({s.department?.name}) - ₹{s.fee}
+                  </option>
+                ))
+              ) : (
+                <option disabled>Loading services...</option>
+              )}
             </select>
           </div>
 

@@ -71,16 +71,22 @@ async login(email: string, password: string) {
 
   let user: Citizen | Officer | null = null;
   let role: 'citizen' | 'officer' | 'admin' = 'citizen';
+  let departmentId: number | null = null;
 
   // Try finding user in Citizen table
   user = await this.citizenRepository.findOne({ where: { email } });
 
   if (user && 'role' in user) {
+    // if citizen is also admin
     role = user.role === 'admin' ? 'admin' : 'citizen';
   } else {
     // Try finding in Officer table
-    user = await this.officerRepository.findOne({ where: { email } });
-    if (user) role = 'officer';
+    const officer = await this.officerRepository.findOne({ where: { email } });
+    if (officer) {
+      user = officer;
+      role = 'officer';
+       departmentId = officer.department_id ?? null; 
+    }
   }
 
   if (!user) {
@@ -92,10 +98,12 @@ async login(email: string, password: string) {
     throw new UnauthorizedException('Invalid email or password');
   }
 
+  // Create JWT
   const token = this.jwtService.sign({
     id: user.id,
     email: user.email,
     role,
+    departmentId, 
   });
 
   return {
@@ -104,9 +112,11 @@ async login(email: string, password: string) {
       id: user.id,
       email: user.email,
       role,
+      departmentId, 
     },
   };
 }
+
 
 
 

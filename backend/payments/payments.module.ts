@@ -12,5 +12,6 @@ import { Application } from '../application/application.entity';
   ],
   providers: [PaymentsService],
   controllers: [PaymentsController],
+  exports: [PaymentsService],
 })
 export class PaymentsModule {}

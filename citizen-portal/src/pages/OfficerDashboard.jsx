@@ -10,22 +10,38 @@ const OfficerDashboard = ({ refreshTrigger }) => {
   const [processing, setProcessing] = useState({});
 
   useEffect(() => {
-    const fetchApplications = async () => {
-      try {
-        const res = await axios.get(
-          "http://localhost:5000/applications/pending-applications",
-          { headers: { Authorization: `Bearer ${user.token}` } }
-        );
+  const fetchApplications = async () => {
+    try {
+      const res = await axios.get(
+        "http://localhost:5000/applications/pending-applications",
+        { headers: { Authorization: `Bearer ${user.token}` } }
+      );
+      console.log("applications:", res.data);
+
+      // If officer has no department, show all applications
+      if (user.departmentId == null) {
         setApplications(res.data);
-      } catch (err) {
-        console.error(err);
-        alert("Failed to fetch applications");
-      } finally {
-        setLoading(false);
+        return;
       }
-    };
-    fetchApplications();
-  }, [user, refreshTrigger]);
+
+      // Filter applications by department using the nested service object
+      const filtered = res.data.filter(
+        (app) => app.service?.department?.id === user.departmentId
+      );
+
+      console.log("filtered applications:", filtered);
+      setApplications(filtered);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to fetch applications");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchApplications();
+}, [user, refreshTrigger]);
+
 
   const handleAction = async (id, action) => {
     setProcessing((prev) => ({ ...prev, [id]: true }));
@@ -52,9 +68,9 @@ const OfficerDashboard = ({ refreshTrigger }) => {
     }
   };
 
-
   const handleSaveRemark = async (id) => {
-    if (!remarks[id] || remarks[id].trim() === "") return alert("Remark cannot be empty");
+    if (!remarks[id] || remarks[id].trim() === "")
+      return alert("Remark cannot be empty");
 
     setProcessing((prev) => ({ ...prev, [id]: true }));
     try {
@@ -75,29 +91,40 @@ const OfficerDashboard = ({ refreshTrigger }) => {
 
   return (
     <div style={{ padding: "20px" }}>
-      <h1>Officer Dashboard</h1>
+      <h1 style={{ color: "#0d47a1" }}>Officer Dashboard</h1>
       <p>Total Pending Applications: {applications.length}</p>
 
       {loading ? (
         <p>Loading applications...</p>
       ) : applications.length === 0 ? (
-        <p>No pending applications.</p>
+        <p>No pending applications for your department.</p>
       ) : (
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "20px" }}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(350px, 1fr))",
+            gap: "25px",
+            marginTop: "20px",
+          }}
+        >
           {applications.map((app) => (
             <div
               key={app.id}
               style={{
                 border: "1px solid #ccc",
-                borderRadius: "8px",
-                padding: "15px",
-                width: "300px",
-                boxShadow: "0 2px 5px rgba(0,0,0,0.1)",
+                borderRadius: "12px",
+                padding: "20px",
+                backgroundColor: "#f9f9ff",
+                boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
+                transition: "transform 0.2s ease",
               }}
+              onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.03)")}
+              onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
             >
-              <h3>{app.applicantName}</h3>
-              <p>Service: {app.service?.name}</p>
-              <p>
+              <h3 style={{ color: "#0d47a1", fontSize: "1.2rem" }}>
+                Service: {app.service?.name}
+              </h3>
+              <p style={{ fontWeight: "bold" }}>
                 Status:{" "}
                 <span
                   style={{
@@ -105,24 +132,33 @@ const OfficerDashboard = ({ refreshTrigger }) => {
                       app.status === "approved"
                         ? "green"
                         : app.status === "rejected"
-                        ? "red"
-                        : "orange",
-                    fontWeight: "bold",
+                          ? "red"
+                          : "orange",
                   }}
                 >
                   {app.status}
                 </span>
               </p>
 
-              <label>
+              <label style={{ fontWeight: "500" }}>
                 Remark:
                 <input
                   type="text"
                   value={remarks[app.id] || ""}
                   onChange={(e) =>
-                    setRemarks((prev) => ({ ...prev, [app.id]: e.target.value }))
+                    setRemarks((prev) => ({
+                      ...prev,
+                      [app.id]: e.target.value,
+                    }))
                   }
-                  style={{ width: "100%", marginTop: "5px", marginBottom: "10px" }}
+                  style={{
+                    width: "100%",
+                    marginTop: "5px",
+                    marginBottom: "15px",
+                    border: "1px solid #ccc",
+                    borderRadius: "5px",
+                    padding: "6px",
+                  }}
                 />
               </label>
 
@@ -130,19 +166,42 @@ const OfficerDashboard = ({ refreshTrigger }) => {
                 <button
                   onClick={() => handleAction(app.id, "approve")}
                   disabled={processing[app.id]}
+                  style={{
+                    backgroundColor: "#4caf50",
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: "5px",
+                    padding: "6px 12px",
+                    cursor: "pointer",
+                  }}
                 >
                   Approve
                 </button>
                 <button
                   onClick={() => handleAction(app.id, "reject")}
                   disabled={processing[app.id]}
+                  style={{
+                    backgroundColor: "#f44336",
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: "5px",
+                    padding: "6px 12px",
+                    cursor: "pointer",
+                  }}
                 >
                   Reject
                 </button>
                 <button
                   onClick={() => handleSaveRemark(app.id)}
                   disabled={processing[app.id]}
-                  style={{ backgroundColor: "#007bff", color: "#fff" }}
+                  style={{
+                    backgroundColor: "#007bff",
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: "5px",
+                    padding: "6px 12px",
+                    cursor: "pointer",
+                  }}
                 >
                   Save Remark
                 </button>

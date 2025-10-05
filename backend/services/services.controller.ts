@@ -31,4 +31,6 @@ export class ServicesController {
   remove(@Param('id', ParseIntPipe) id: number): Promise<{ deleted: boolean }> {
     return this.servicesService.remove(id);
   }
+
+
 }
