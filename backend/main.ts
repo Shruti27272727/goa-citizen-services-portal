@@ -6,18 +6,24 @@ import * as bodyParser from 'body-parser';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  app.enableCors();
 
- 
+  app.enableCors({
+    origin: '*', 
+  });
+
+
   app.use(bodyParser.json({ limit: '10mb' }));
   app.use(bodyParser.urlencoded({ limit: '10mb', extended: true }));
 
-  
+
   app.useGlobalPipes(
     new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }),
   );
 
-  await app.listen(5000);
-  console.log(`Backend running on http://localhost:5000`);
+  const PORT = process.env.PORT || 5000;
+
+  await app.listen(PORT, () => {
+  
+  });
 }
 bootstrap();
