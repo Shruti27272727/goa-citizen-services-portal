@@ -10,29 +10,50 @@ import { Application } from './backend/application/application.entity';
 import { Document } from './backend/documents/documents.entity';
 import { Payment } from './backend/payments/payments.entity';
 
+// Load env variables
+const isProduction = !!process.env.DATABASE_URL;
 
-export const AppDataSource = new DataSource({
-  type: 'postgres',
-  host: 'localhost',
-  port: 5432,
-  username: 'postgres', // your postgres username
-  password: 'yourpassword', // your postgres password
-  database: 'goa_portal', // your database name
-  synchronize: false, // always false in production; use migrations
-  logging: false,
-  entities: [
-    Citizen,
-    Role,
-    Aadhar,
-    Officer,
-    Department,
-    Service,
-    Application,
-    Document,
-    Payment,
-  ],
-  migrations: ['migrations/*.ts'],
-  subscribers: [],
-});
-
-
+export const AppDataSource = new DataSource(
+  isProduction
+    ? {
+        type: 'postgres',
+        url: process.env.DATABASE_URL, // Railway injects this automatically
+        synchronize: false, // keep false for production
+        logging: false,
+        ssl: { rejectUnauthorized: false }, // Required for Railway SSL
+        entities: [
+          Citizen,
+          Role,
+          Aadhar,
+          Officer,
+          Department,
+          Service,
+          Application,
+          Document,
+          Payment,
+        ],
+        migrations: ['migrations/*.ts'],
+      }
+    : {
+        type: 'postgres',
+        host: process.env.DB_HOST || 'localhost',
+        port: Number(process.env.DB_PORT) || 5432,
+        username: process.env.DB_USERNAME || 'postgres',
+        password: process.env.DB_PASSWORD || 'yourpassword',
+        database: process.env.DB_DATABASE || 'goa_portal',
+        synchronize: true, // ok for local dev
+        logging: true,
+        entities: [
+          Citizen,
+          Role,
+          Aadhar,
+          Officer,
+          Department,
+          Service,
+          Application,
+          Document,
+          Payment,
+        ],
+        migrations: ['migrations/*.ts'],
+      }
+);
