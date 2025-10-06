@@ -6,7 +6,8 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 
-const backendUrl = process.env.BACKEND_URL || 'http://localhost:5000';
+const backendUrl =
+  import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 const Register = () => {
   const [name, setName] = useState("");
   const [aadhaar, setAadhaar] = useState(""); // Aadhaar or phone
@@ -22,7 +23,7 @@ const Register = () => {
     }
 
     try {
-      const res = await axios.post(`${backendUrl}/auth/register", {
+      const res = await axios.post(`${backendUrl}/auth/register`, {
         name,
         email,
         phone: aadhaar, // backend expects phone or aadhaar in contact

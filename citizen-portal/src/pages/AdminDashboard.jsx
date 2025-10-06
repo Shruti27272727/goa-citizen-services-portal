@@ -7,8 +7,9 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
   ResponsiveContainer
 } from "recharts";
+const backendUrl =
+  import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 
-const backendUrl = process.env.BACKEND_URL || 'http://localhost:5000';
 const STATUS_COLORS = ["#FFBB28", "#0088FE", "#FF4D4F"];
 const DEPT_COLORS = { Revenue: "#6366F1", Panchayat: "#10B981", Transport: "#F59E0B" };
 
@@ -57,10 +58,10 @@ const AdminDashboard = () => {
         })));
 
         const [servicesRes, departmentsRes, officersRes, usersRes] = await Promise.all([
-          axios.get("http://localhost:5000/applications/services"),
-          axios.get("http://localhost:5000/applications/departments"),
-          axios.get("http://localhost:5000/officers"),
-          axios.get("http://localhost:5000/citizen"),
+          axios.get(`${backendUrl}/applications/services`),
+          axios.get(`${backendUrl}/applications/departments`),
+          axios.get(`${backendUrl}/officers`),
+          axios.get(`${backendUrl}/citizen`),
         ]);
 
         setServices(servicesRes.data || []);
@@ -84,7 +85,7 @@ const AdminDashboard = () => {
   const handleAddService = async () => {
     if (!newService.name || !newService.fee || !newService.departmentId) return alert("Fill all fields");
     try {
-      const res = await axios.post(`${backendUrl}/applications/service/create", newService);
+      const res = await axios.post(`${backendUrl}/applications/service/create`, newService);
       setServices(prev => [...prev, res.data]);
       setNewService({ name: "", fee: 0, departmentId: "" });
       alert("Service added successfully!");
@@ -97,7 +98,7 @@ const AdminDashboard = () => {
   const handleAddDepartment = async () => {
     if (!newDepartment) return alert("Enter department name");
     try {
-      const res = await axios.post(`${backendUrl}/applications/department/create", { name: newDepartment });
+      const res = await axios.post(`${backendUrl}/applications/department/create`, { name: newDepartment });
       setDepartments(prev => [...prev, res.data]);
       setNewDepartment("");
       alert("Department added successfully!");
@@ -110,7 +111,7 @@ const AdminDashboard = () => {
   const handleAssignOfficer = async () => {
     if (!selectedOfficer || !selectedDept) return alert("Select officer and department!");
     try {
-      await axios.post(`http://localhost:5000/applications/officer/assign/${selectedOfficer}/${selectedDept}`);
+      await axios.post(`${backendUrl}/applications/officer/assign/${selectedOfficer}/${selectedDept}`);
       alert("Officer assigned successfully!");
     } catch (err) {
       console.error(err);
@@ -121,7 +122,7 @@ const AdminDashboard = () => {
   const handleChangeRole = async () => {
     if (!roleChange.userId || !roleChange.role) return alert("Select user and role!");
     try {
-      await axios.post(`${backendUrl}/applications/role/assign", { userId: Number(roleChange.userId), role: roleChange.role });
+      await axios.post(`${backendUrl}/applications/role/assign`, { userId: Number(roleChange.userId), role: roleChange.role });
       setUsers(prev => prev.map(u => u.id === roleChange.userId ? { ...u, role: roleChange.role } : u));
     } catch (err) {
       console.error(err);

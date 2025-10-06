@@ -2,7 +2,8 @@ import React, { useEffect, useState, useContext } from "react";
 import axios from "axios";
 import { AuthContext } from "../context/AuthContext";
 
-const backendUrl = process.env.BACKEND_URL || 'http://localhost:5000';
+const backendUrl =
+  import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 const ApplicationHistory = ({ refreshTrigger }) => {
   const { user } = useContext(AuthContext);
   const [applications, setApplications] = useState([]);
@@ -22,7 +23,7 @@ const ApplicationHistory = ({ refreshTrigger }) => {
 
       try {
         const res = await axios.get(
-          `http://localhost:5000/applications/history/${user.id}`,
+          `${backendUrl}/applications/history/${user.id}`,
           { headers: { Authorization: `Bearer ${user.token}` } }
         );
 
@@ -80,7 +81,7 @@ const ApplicationHistory = ({ refreshTrigger }) => {
                   ? app.documents.map((doc) => (
                       <div key={doc.id}>
                         <a
-                          href={`http://localhost:5000/${doc.filePath}`}
+                          href={`${backendUrl}/${doc.filePath}`}
                           target="_blank"
                           rel="noreferrer"
                         >

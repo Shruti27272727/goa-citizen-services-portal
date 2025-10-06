@@ -2,7 +2,8 @@ import React, { useEffect, useState, useContext } from "react";
 import axios from "axios";
 import { AuthContext } from "../context/AuthContext";
 
-const backendUrl = process.env.BACKEND_URL || 'http://localhost:5000';
+const backendUrl =
+  import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 const OfficerDashboard = ({ refreshTrigger }) => {
   const { user } = useContext(AuthContext);
   const [applications, setApplications] = useState([]);
@@ -14,7 +15,7 @@ const OfficerDashboard = ({ refreshTrigger }) => {
   const fetchApplications = async () => {
     try {
       const res = await axios.get(
-        "http://localhost:5000/applications/pending-applications",
+        `${backendUrl}/applications/pending-applications`,
         { headers: { Authorization: `Bearer ${user.token}` } }
       );
       console.log("applications:", res.data);
@@ -48,7 +49,7 @@ const OfficerDashboard = ({ refreshTrigger }) => {
     setProcessing((prev) => ({ ...prev, [id]: true }));
     try {
       await axios.post(
-        `http://localhost:5000/applications/${action}/${id}/${user.id}`,
+        `${backendUrl}/applications/${action}/${id}/${user.id}`,
         { remarks: remarks[id] || "" },
         { headers: { Authorization: `Bearer ${user.token}` } }
       );
@@ -76,7 +77,7 @@ const OfficerDashboard = ({ refreshTrigger }) => {
     setProcessing((prev) => ({ ...prev, [id]: true }));
     try {
       await axios.post(
-        `http://localhost:5000/applications/add-remark/${id}/${user.id}`,
+        `${backendUrl}/applications/add-remark/${id}/${user.id}`,
         { remark: remarks[id] },
         { headers: { Authorization: `Bearer ${user.token}` } }
       );

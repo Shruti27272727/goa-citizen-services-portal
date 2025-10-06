@@ -3,7 +3,8 @@ import { AuthContext } from "../context/AuthContext";
 import axios from "axios";
 import RazorpayButton from "../components/RazorpayButton";
 
-const backendUrl = process.env.BACKEND_URL || 'http://localhost:5000';
+const backendUrl =
+  import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 const ApplyService = () => {
   const { user } = useContext(AuthContext);
   const [services, setServices] = useState([]);
@@ -16,7 +17,7 @@ const ApplyService = () => {
   useEffect(() => {
     const fetchServices = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/applications/services");
+        const res = await axios.get(`${backendUrl}/applications/services`);
         setServices(res.data || []);
       } catch (err) {
         console.error("Failed to fetch services:", err);
@@ -43,7 +44,7 @@ const ApplyService = () => {
       formData.append("serviceId", selectedService.id);
       files.forEach((file) => formData.append("documents", file));
 
-      const res = await axios.post(`${backendUrl}/applications/apply", formData, {
+      const res = await axios.post(`${backendUrl}/applications/apply`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 

@@ -2,7 +2,8 @@ import React, { useEffect, useState, useContext } from 'react';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
 
-const backendUrl = process.env.BACKEND_URL || 'http://localhost:5000';
+const backendUrl =
+  import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 const CitizenProfile = () => {
   const { user } = useContext(AuthContext); // logged-in user from context
   const [profile, setProfile] = useState(null);
@@ -13,7 +14,7 @@ const CitizenProfile = () => {
     const fetchProfile = async () => {
       try {
         // Use stored email or token to fetch profile
-        const res = await axios.get(`http://localhost:5000/auth/citizen?email=${user.email}`, {
+        const res = await axios.get(`${backendUrl}/auth/citizen?email=${user.email}`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`,
           },
