@@ -3,6 +3,7 @@ import { AuthContext } from "../context/AuthContext";
 import axios from "axios";
 import RazorpayButton from "../components/RazorpayButton";
 
+const backendUrl = process.env.BACKEND_URL || 'http://localhost:5000';
 const ApplyService = () => {
   const { user } = useContext(AuthContext);
   const [services, setServices] = useState([]);
@@ -42,7 +43,7 @@ const ApplyService = () => {
       formData.append("serviceId", selectedService.id);
       files.forEach((file) => formData.append("documents", file));
 
-      const res = await axios.post("http://localhost:5000/applications/apply", formData, {
+      const res = await axios.post(`${backendUrl}/applications/apply", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 

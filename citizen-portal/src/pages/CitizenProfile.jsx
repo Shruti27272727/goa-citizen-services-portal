@@ -2,6 +2,7 @@ import React, { useEffect, useState, useContext } from 'react';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
 
+const backendUrl = process.env.BACKEND_URL || 'http://localhost:5000';
 const CitizenProfile = () => {
   const { user } = useContext(AuthContext); // logged-in user from context
   const [profile, setProfile] = useState(null);

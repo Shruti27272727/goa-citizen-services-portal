@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import { AuthContext } from "../context/AuthContext";
 
+const backendUrl = process.env.BACKEND_URL || 'http://localhost:5000';
 const Login = () => {
   const { login } = useContext(AuthContext);
   const [email, setEmail] = useState("");
@@ -20,7 +21,7 @@ const Login = () => {
     localStorage.removeItem("token");
 
     try {
-      const res = await axios.post("http://localhost:5000/auth/login", { email, password });
+      const res = await axios.post(`${backendUrl}/auth/login", { email, password });
       const user = res.data.user;
 
       // Save new session in context and localStorage

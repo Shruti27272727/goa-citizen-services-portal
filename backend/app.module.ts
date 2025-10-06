@@ -6,7 +6,6 @@ import { JwtModule } from '@nestjs/jwt';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
-
 import { Citizen } from './citizen/citizen.entity';
 import { Aadhar } from './aadhar/aadhar.entity';
 import { Address } from './addresses/addresses.entity';
@@ -34,36 +33,36 @@ import { AuthModule } from './auth/auth.module';
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
 
-    
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        type: 'postgres',
-        host: configService.get<string>('DB_HOST'),
-        port: Number(configService.get('DB_PORT') ?? 5432),
-        username: configService.get<string>('DB_USERNAME'),
-        password: configService.get<string>('DB_PASSWORD'),
-        database: configService.get<string>('DB_DATABASE'),
-        entities: [
-          Citizen,
-          Aadhar,
-          Address,
-          Role,
-          Department,
-          Service,
-          Application,
-          Document,
-          Payment,
-          Officer,
-        ],
-        logging: ['error', 'warn', 'query'],
-        synchronize: false, 
-       // migrationsRun: true,
-      }),
+      useFactory: (configService: ConfigService) => {
+       
+        return {
+          type: 'postgres',
+          host: configService.get<string>('DB_HOST'),
+          port: Number(configService.get('DB_PORT') ?? 5432),
+          username: configService.get<string>('DB_USERNAME'),
+          password: configService.get<string>('DB_PASSWORD'),
+          database: configService.get<string>('DB_DATABASE'),
+          entities: [
+            Citizen,
+            Aadhar,
+            Address,
+            Role,
+            Department,
+            Service,
+            Application,
+            Document,
+            Payment,
+            Officer,
+          ],
+          logging: ['error', 'warn', 'query'],
+          synchronize: true, // only for development, disable in production
+        };
+      },
     }),
 
-   
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -73,7 +72,6 @@ import { AuthModule } from './auth/auth.module';
       }),
     }),
 
-   
     CitizenModule,
     AadharModule,
     AddressesModule,
