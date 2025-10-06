@@ -7,8 +7,8 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
   ResponsiveContainer
 } from "recharts";
-const backendUrl =
-  import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
+const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
+
 
 const STATUS_COLORS = ["#FFBB28", "#0088FE", "#FF4D4F"];
 const DEPT_COLORS = { Revenue: "#6366F1", Panchayat: "#10B981", Transport: "#F59E0B" };
@@ -41,7 +41,7 @@ const AdminDashboard = () => {
       setError("");
 
       try {
-        const dashboardRes = await axios.get("http://localhost:5000/applications/getDashboardStatus");
+        const dashboardRes = await axios.get(`${backendUrl}/applications/getDashboardStatus`);
         const data = dashboardRes.data;
 
         setStatus(data?.stats || { total: 0, pending: 0, approved: 0, rejected: 0 });
