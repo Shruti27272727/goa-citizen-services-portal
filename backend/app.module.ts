@@ -33,14 +33,32 @@ import { AuthModule } from './auth/auth.module';
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
 
+    // ✅ Dynamic DB configuration for local + production
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
-       
+        const databaseUrl = configService.get<string>('DATABASE_URL');
+        const isProduction = process.env.NODE_ENV === 'production';
+
+        if (databaseUrl) {
+          // 🚀 Use DATABASE_URL (Render / Railway)
+          return {
+            type: 'postgres',
+            url: databaseUrl,
+            autoLoadEntities: true,
+            synchronize: true, // ❌ disable in real production with migrations
+            ssl: isProduction
+              ? { rejectUnauthorized: false } // required by Render/Railway
+              : false,
+            logging: ['error', 'warn'],
+          };
+        }
+
+        // 🧑‍💻 Local .env configuration
         return {
           type: 'postgres',
-          host: configService.get<string>('DATABASE_URL'),
+          host: configService.get<string>('DB_HOST') || 'localhost',
           port: Number(configService.get('DB_PORT') ?? 5432),
           username: configService.get<string>('DB_USERNAME'),
           password: configService.get<string>('DB_PASSWORD'),
@@ -58,11 +76,12 @@ import { AuthModule } from './auth/auth.module';
             Officer,
           ],
           logging: ['error', 'warn', 'query'],
-          synchronize: true, // only for development, disable in production
+          synchronize: true, // safe for dev
         };
       },
     }),
 
+    // ✅ JWT configuration
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
