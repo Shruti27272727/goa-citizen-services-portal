@@ -290,28 +290,74 @@ export class ApplicationService {
 
 /** ------------------- ROLE MANAGEMENT ------------------- **/
 async assignRole(userId: number, roleType: string) {
-  // Fetch the role entity from DB
-  console.log('check',roleType);
-  const role = await this.roleRepo.findOne({ where: { role_type: roleType.toLowerCase() } });  
-  if (!role) throw new NotFoundException('Role not found');
-console.log('checkrole',role);
-  // Citizens can have "citizen" or "admin"
-  if (role.role_type === 'citizen' || role.role_type === 'admin') {
+    // Normalize input
+    roleType = roleType.toLowerCase();
+
+    // Try to find user in both repositories
     const citizen = await this.citizenRepo.findOne({ where: { id: userId } });
-    if (!citizen) throw new NotFoundException('Citizen not found');
-
-    citizen.role = role.role_type;
-    return this.citizenRepo.save(citizen);
-
-  } else {
-    // Officers can have other roles
     const officer = await this.officerRepo.findOne({ where: { id: userId } });
-    if (!officer) throw new NotFoundException('Officer not found');
 
-  
-    return this.officerRepo.save(officer);
+    // --- Case 1: User exists in CITIZEN table ---
+    if (citizen) {
+      if (roleType === 'officer') {
+        // Convert Citizen → Officer
+        const newOfficer = this.officerRepo.create({
+          name: citizen.name,
+          email: citizen.email,
+          password: citizen.password,
+        });
+        await this.officerRepo.save(newOfficer);
+
+        // Optionally update citizen role to indicate conversion
+        citizen.role = roleType; // or 'officer' if you want to mark it
+        await this.citizenRepo.save(citizen);
+
+        return {
+          message: `Citizen ${citizen.name} promoted to Officer.`,
+          officer: newOfficer,
+          citizen,
+        };
+      } else if (roleType === 'admin') {
+        // Promote citizen to admin
+        citizen.role = 'admin';
+        await this.citizenRepo.save(citizen);
+
+        return {
+          message: `Citizen ${citizen.name} is now an admin.`,
+          citizen,
+        };
+      } 
+      
+    }
+
+    // --- Case 2: User exists in OFFICER table ---
+    if (officer) {
+      if (roleType === 'citizen' || roleType === 'admin') {
+        // Convert Officer → Citizen
+        const newCitizen = this.citizenRepo.create({
+          name: officer.name,
+          email: officer.email,
+          password: officer.password,
+          role: roleType === 'admin' ? 'admin' : 'citizen',
+        });
+        await this.citizenRepo.save(newCitizen);
+
+        // Remove officer record
+        await this.officerRepo.delete(officer.id);
+
+        return {
+          message: `Officer ${officer.name} converted to ${roleType}.`,
+          citizen: newCitizen,
+        };
+      } else {
+        return { message: `Officer ${officer.name} already has role '${roleType}'` };
+      }
+    }
+
+   
+    throw new NotFoundException(`User with ID ${userId} not found in either table.`);
   }
 }
-}
+
 
 

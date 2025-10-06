@@ -62,7 +62,7 @@ export class AuthService {
     };
   }
 
- // Login Citizen/Officer
+
 // Login Citizen/Officer
 async login(email: string, password: string) {
   if (!email || !password) {
@@ -73,19 +73,18 @@ async login(email: string, password: string) {
   let role: 'citizen' | 'officer' | 'admin' = 'citizen';
   let departmentId: number | null = null;
 
-  // Try finding user in Citizen table
-  user = await this.citizenRepository.findOne({ where: { email } });
-
-  if (user && 'role' in user) {
-    // if citizen is also admin
-    role = user.role === 'admin' ? 'admin' : 'citizen';
+  // 1️⃣ Try finding user in Officer table first
+  const officer = await this.officerRepository.findOne({ where: { email } });
+  if (officer) {
+    user = officer;
+    role = 'officer';
+    departmentId = officer.department_id ?? null;
   } else {
-    // Try finding in Officer table
-    const officer = await this.officerRepository.findOne({ where: { email } });
-    if (officer) {
-      user = officer;
-      role = 'officer';
-       departmentId = officer.department_id ?? null; 
+    // 2️⃣ If not found, try Citizen table
+    const citizen = await this.citizenRepository.findOne({ where: { email } });
+    if (citizen) {
+      user = citizen;
+      role = citizen.role === 'admin' ? 'admin' : 'citizen';
     }
   }
 
@@ -93,6 +92,7 @@ async login(email: string, password: string) {
     throw new UnauthorizedException('Invalid email or password');
   }
 
+  // Verify password
   const validPassword = await bcrypt.compare(password, user.password);
   if (!validPassword) {
     throw new UnauthorizedException('Invalid email or password');
@@ -103,7 +103,7 @@ async login(email: string, password: string) {
     id: user.id,
     email: user.email,
     role,
-    departmentId, 
+    departmentId,
   });
 
   return {
@@ -112,7 +112,7 @@ async login(email: string, password: string) {
       id: user.id,
       email: user.email,
       role,
-      departmentId, 
+      departmentId,
     },
   };
 }

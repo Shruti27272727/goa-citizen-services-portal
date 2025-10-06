@@ -133,8 +133,8 @@ const AdminDashboard = () => {
     console.log('check2',roleChange);
     if (!roleChange.userId || !roleChange.role) return alert("Select user and role!");
     try {
-      await axios.post("http://localhost:5000/applications/role/assign", roleChange);
-      alert("Role updated successfully!");
+      console.log('check3',{userId: Number(roleChange.userId), role: roleChange.role});
+      await axios.post("http://localhost:5000/applications/role/assign", {userId: Number(roleChange.userId), role: roleChange.role});
       setUsers(prev => prev.map(u => u.id === roleChange.userId ? { ...u, role: roleChange.role } : u));
     } catch (err) {
       console.error(err);

@@ -25,7 +25,7 @@ export class Citizen {
   password: string;
 
   @Column({ type: 'varchar', default: 'citizen' })
-  role: 'citizen' | 'admin';
+  role: 'citizen' | 'admin' | 'officer';
 
   @OneToMany(() => Application, (application) => application.citizen)
   applications: Application[];
