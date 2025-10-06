@@ -141,12 +141,12 @@ export class ApplicationController {
     return this.appService.createRole(roleType);
   }
 
-  @Post('role/assign')
+   @Post('role/assign')
   async assignRole(
     @Body('userId') userId: number,
-    @Body('roleId') roleId: number,
-    @Body('userType') userType: 'Citizen' | 'Officer',
+    @Body('role') role: string,
+   
   ) {
-    return this.appService.assignRole(userId, roleId, userType);
+    return this.appService.assignRole(userId, role);
   }
 }

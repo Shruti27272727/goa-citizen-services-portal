@@ -130,6 +130,7 @@ const AdminDashboard = () => {
   };
 
   const handleChangeRole = async () => {
+    console.log('check2',roleChange);
     if (!roleChange.userId || !roleChange.role) return alert("Select user and role!");
     try {
       await axios.post("http://localhost:5000/applications/role/assign", roleChange);

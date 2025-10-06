@@ -288,29 +288,30 @@ export class ApplicationService {
     return this.roleRepo.save(role);
   }
 
-async assignRole(userId: number, roleId: number, userType: 'Citizen' | 'Officer') {
-  const role = await this.roleRepo.findOne({ where: { id: roleId } });
+/** ------------------- ROLE MANAGEMENT ------------------- **/
+async assignRole(userId: number, roleType: string) {
+  // Fetch the role entity from DB
+  console.log('check',roleType);
+  const role = await this.roleRepo.findOne({ where: { role_type: roleType.toLowerCase() } });  
   if (!role) throw new NotFoundException('Role not found');
-
-  if (userType === 'Citizen') {
+console.log('checkrole',role);
+  // Citizens can have "citizen" or "admin"
+  if (role.role_type === 'citizen' || role.role_type === 'admin') {
     const citizen = await this.citizenRepo.findOne({ where: { id: userId } });
     if (!citizen) throw new NotFoundException('Citizen not found');
 
-    if (role.role_type !== "citizen" && role.role_type !== "admin") {
-      throw new BadRequestException("Invalid role type");
-    }
-
-    citizen.role = role.role_type; // now type-safe
+    citizen.role = role.role_type;
     return this.citizenRepo.save(citizen);
 
   } else {
+    // Officers can have other roles
     const officer = await this.officerRepo.findOne({ where: { id: userId } });
     if (!officer) throw new NotFoundException('Officer not found');
 
-    // assign department_id (use proper mapping)
-    officer.department_id = role.id; 
+  
     return this.officerRepo.save(officer);
   }
 }
-
 }
+
+
