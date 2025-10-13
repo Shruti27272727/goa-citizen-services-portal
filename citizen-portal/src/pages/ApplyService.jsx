@@ -57,7 +57,7 @@ const ApplyService = () => {
 
       setOrder(paymentOrder);
       alert(
-        `Application for "${selectedService.name}" (${selectedService.department} Department) submitted successfully! Please complete the payment.`
+        `Application for "${selectedService.name}"submitted successfully! Please complete the payment.`
       );
     } catch (err) {
       console.error(err);
