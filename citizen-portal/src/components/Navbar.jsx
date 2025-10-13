@@ -1,8 +1,19 @@
-import React from "react";
-import { Link, useLocation } from "react-router-dom";
+import React, { useContext } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { AuthContext } from "../context/AuthContext";
 
 const Navbar = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { logout } = useContext(AuthContext); // ✅ Assuming you have logout() in AuthContext
+
+  // Logout handler
+  const handleLogout = () => {
+    logout(); // clears auth data (if you have it)
+    localStorage.removeItem("token"); // optional safety
+    alert("You have been logged out successfully!");
+    navigate("/login");
+  };
 
   return (
     <nav className="w-full bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 text-white py-4 px-6 shadow-lg fixed top-0 left-0 z-50">
@@ -13,7 +24,7 @@ const Navbar = () => {
         </h1>
 
         {/* Nav Links */}
-        <div className="hidden md:flex space-x-6">
+        <div className="hidden md:flex space-x-6 items-center">
           <Link
             to="/login"
             className={`hover:text-yellow-200 font-medium transition-all duration-300 ${
@@ -60,6 +71,14 @@ const Navbar = () => {
           >
             Profile
           </Link>
+
+          {/* ✅ Logout Button */}
+          <button
+            onClick={handleLogout}
+            className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-medium transition-all duration-300"
+          >
+            Logout
+          </button>
         </div>
 
         {/* Mobile Menu Placeholder (Optional Enhancement) */}
