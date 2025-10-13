@@ -5,16 +5,16 @@ import RazorpayButton from "../components/RazorpayButton";
 import Navbar from "../components/Navbar";
 import { useNavigate } from "react-router-dom";
 
-const backendUrl =
-  import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
+const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 
 const ApplyService = () => {
   const { user } = useContext(AuthContext);
   const [services, setServices] = useState([]);
   const [serviceId, setServiceId] = useState(null);
-  const [files, setFiles] = useState([]);
+  const [fileUploads, setFileUploads] = useState({});
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [requiredDocs, setRequiredDocs] = useState([]);
   const navigate = useNavigate();
 
   // ---- Fetch services from backend ----
@@ -30,13 +30,55 @@ const ApplyService = () => {
     fetchServices();
   }, []);
 
-  const handleFileChange = (e) => setFiles(Array.from(e.target.files));
+  // ---- Update required documents based on department ----
+  useEffect(() => {
+    if (!serviceId) {
+      setRequiredDocs([]);
+      setFileUploads({});
+      return;
+    }
+
+    const selectedService = services.find((s) => s.id === Number(serviceId));
+    const departmentName = selectedService?.department?.name?.toLowerCase();
+
+    let docs = [];
+    if (departmentName?.includes("revenue")) {
+      docs = ["Passport Size Photo", "Signature", "Electricity Bill"];
+    } else if (departmentName?.includes("panchayat")) {
+      docs = ["Photo", "Signature", "Address Proof"];
+    } else if (departmentName?.includes("transport")) {
+      docs = ["Photo", "Signature", "Aadhaar Card", "License"];
+    }
+
+    setRequiredDocs(docs);
+
+    // Initialize upload fields
+    const initialUploads = {};
+    docs.forEach((doc) => (initialUploads[doc] = null));
+    setFileUploads(initialUploads);
+  }, [serviceId, services]);
+
+  const handleFileChange = (docName, file) => {
+    setFileUploads((prev) => ({
+      ...prev,
+      [docName]: file,
+    }));
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     if (!serviceId) return alert("Please select a service.");
-    if (!files.length) return alert("Please upload at least one document.");
     if (!user?.id) return alert("Please log in first!");
+
+    // Ensure all required files are uploaded
+    const missingDocs = requiredDocs.filter((doc) => !fileUploads[doc]);
+    if (missingDocs.length > 0)
+      return alert(
+        `Please upload all required documents before applying. Missing: ${missingDocs.join(
+          ", "
+        )}`
+      );
 
     try {
       setLoading(true);
@@ -46,18 +88,23 @@ const ApplyService = () => {
       const formData = new FormData();
       formData.append("citizenId", user.id);
       formData.append("serviceId", selectedService.id);
-      files.forEach((file) => formData.append("documents", file));
+
+      // Append each uploaded file
+      Object.entries(fileUploads).forEach(([docName, file]) => {
+        formData.append("documents", file);
+      });
 
       const res = await axios.post(`${backendUrl}/applications/apply`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
       const paymentOrder = res.data?.payment?.order;
-      if (!paymentOrder) throw new Error("Payment order not returned from backend.");
+      if (!paymentOrder)
+        throw new Error("Payment order not returned from backend.");
 
       setOrder(paymentOrder);
       alert(
-        `Application for "${selectedService.name}"submitted successfully! Please complete the payment.`
+        `Application for "${selectedService.name}" submitted successfully! Please complete the payment.`
       );
     } catch (err) {
       console.error(err);
@@ -108,22 +155,32 @@ const ApplyService = () => {
               </select>
             </div>
 
-            {/* File Upload */}
-            <div>
-              <label className="block font-semibold text-gray-700 mb-2">
-                Upload Required Document(s):
-              </label>
-              <input
-                type="file"
-                multiple
-                onChange={handleFileChange}
-                className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                required
-              />
-              <p className="text-sm text-gray-500 mt-1">
-                * Please upload all the necessary documents before applying.
-              </p>
-            </div>
+            {/* File Uploads */}
+            {requiredDocs.length > 0 && (
+              <div>
+                <label className="block font-semibold text-gray-700 mb-2">
+                  Upload Required Document(s):
+                </label>
+                <div className="space-y-4">
+                  {requiredDocs.map((doc, index) => (
+                    <div key={index}>
+                      <label className="block text-gray-700 font-medium mb-1">
+                        {doc}:
+                      </label>
+                      <input
+                        type="file"
+                        accept=".jpg,.jpeg,.png,.pdf"
+                        onChange={(e) =>
+                          handleFileChange(doc, e.target.files[0] || null)
+                        }
+                        className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                        required
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Submit Button */}
             <button
