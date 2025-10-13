@@ -1,9 +1,11 @@
 import React, { useEffect, useState, useContext } from 'react';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
+import Navbar from '../components/Navbar';
 
 const backendUrl =
   import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
+
 const CitizenProfile = () => {
   const { user } = useContext(AuthContext); // logged-in user from context
   const [profile, setProfile] = useState(null);
@@ -28,17 +30,36 @@ const CitizenProfile = () => {
     fetchProfile();
   }, [user]);
 
-  if (!profile) return <div>Loading profile...</div>;
+  if (!profile)
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-100 to-blue-300 flex flex-col">
+        <Navbar />
+        <div className="flex-grow flex items-center justify-center">
+          <p className="text-gray-700 text-lg">Loading profile...</p>
+        </div>
+      </div>
+    );
 
   return (
-    <div className="citizen-profile">
-      <h1>Citizen Profile</h1>
-      <p><strong>Name</strong> {profile.name}</p>
-      <p><strong>ID:</strong> {profile.id}</p>
-      <p><strong>Address</strong> {profile.address}</p>
-      <p><strong>Email:</strong> {profile.email}</p>
-      <p><strong>Phone:</strong> {profile.phone}</p>
-      <p><strong>Role:</strong> {profile.role}</p>
+    <div className="min-h-screen bg-gradient-to-br from-blue-100 to-blue-300 flex flex-col">
+      <Navbar />
+
+      <div className="flex-grow flex items-center justify-center p-6 pt-24">
+        <div className="w-full max-w-md bg-white/70 backdrop-blur-xl border border-gray-200 rounded-2xl shadow-xl p-8">
+          <h1 className="text-3xl font-bold text-blue-700 mb-6 text-center">
+            Citizen Profile
+          </h1>
+
+          <div className="space-y-4 text-gray-800">
+            <p><span className="font-semibold">Name:</span> {profile.name}</p>
+            <p><span className="font-semibold">ID:</span> {profile.id}</p>
+            <p><span className="font-semibold">Address:</span> {profile.address}</p>
+            <p><span className="font-semibold">Email:</span> {profile.email}</p>
+            <p><span className="font-semibold">Phone:</span> {profile.phone}</p>
+            <p><span className="font-semibold">Role:</span> {profile.role}</p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

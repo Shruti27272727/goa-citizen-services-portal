@@ -48,31 +48,31 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-500 via-blue-600 to-blue-800 flex flex-col items-center justify-center">
+    <div className="relative flex flex-col items-center justify-center min-h-screen overflow-hidden bg-gradient-to-br from-blue-100 to-blue-300">
       <Navbar />
 
-      <div className="bg-white/10 backdrop-blur-md border border-white/20 p-10 rounded-2xl shadow-2xl w-full max-w-md">
-        <h1 className="text-3xl font-extrabold text-center text-white mb-6">
+      <div className="relative z-10 bg-white/60 backdrop-blur-xl border border-gray-200 p-10 rounded-3xl shadow-2xl w-full max-w-md transform hover:scale-[1.01] transition-transform duration-300">
+        <h1 className="text-4xl font-extrabold text-center text-gray-800 mb-2">
           Welcome Back 👋
         </h1>
-        <p className="text-center text-blue-100 mb-6">
-          Please log in to your account
+        <p className="text-center text-gray-600 mb-8 text-sm">
+          Log in to continue to your account
         </p>
 
         {error && (
-          <p className="text-red-400 text-center font-semibold mb-4">
+          <div className="bg-red-100 text-red-700 border border-red-300 rounded-lg p-3 text-center font-medium mb-4">
             {error}
-          </p>
+          </div>
         )}
 
-        <form onSubmit={handleLogin} className="space-y-5">
+        <form onSubmit={handleLogin} className="space-y-6">
           <div>
-            <label className="block text-sm font-semibold text-blue-100 mb-1">
-              Email
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Email Address
             </label>
             <input
               type="email"
-              className="w-full border border-blue-200/40 rounded-lg p-3 bg-white/20 text-white placeholder-blue-200 focus:ring-2 focus:ring-white focus:outline-none"
+              className="w-full border border-gray-300 rounded-xl p-3 bg-white text-gray-800 placeholder-gray-400 focus:ring-2 focus:ring-indigo-400 focus:outline-none transition-all"
               placeholder="Enter your email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -81,12 +81,12 @@ const Login = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-blue-100 mb-1">
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
               Password
             </label>
             <input
               type="password"
-              className="w-full border border-blue-200/40 rounded-lg p-3 bg-white/20 text-white placeholder-blue-200 focus:ring-2 focus:ring-white focus:outline-none"
+              className="w-full border border-gray-300 rounded-xl p-3 bg-white text-gray-800 placeholder-gray-400 focus:ring-2 focus:ring-indigo-400 focus:outline-none transition-all"
               placeholder="Enter your password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -96,17 +96,17 @@ const Login = () => {
 
           <button
             type="submit"
-            className="w-full bg-white text-blue-700 font-bold py-3 rounded-lg hover:bg-blue-100 transition-all duration-300 shadow-lg hover:shadow-white/30"
+            className="w-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-semibold py-3 rounded-xl hover:from-indigo-600 hover:to-purple-600 transition-all duration-300 shadow-md hover:shadow-lg"
           >
-            Login
+            Log In
           </button>
         </form>
 
-        <p className="text-center text-blue-100 mt-6">
+        <p className="text-center text-gray-600 mt-8">
           Don’t have an account?{" "}
           <span
             onClick={() => navigate("/register")}
-            className="text-white font-semibold hover:underline cursor-pointer"
+            className="text-indigo-600 font-semibold hover:underline cursor-pointer hover:text-purple-600"
           >
             Register
           </span>

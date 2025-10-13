@@ -2,9 +2,12 @@ import React, { useState, useEffect, useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
 import axios from "axios";
 import RazorpayButton from "../components/RazorpayButton";
+import Navbar from "../components/Navbar";
+import { useNavigate } from "react-router-dom";
 
 const backendUrl =
   import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
+
 const ApplyService = () => {
   const { user } = useContext(AuthContext);
   const [services, setServices] = useState([]);
@@ -12,6 +15,7 @@ const ApplyService = () => {
   const [files, setFiles] = useState([]);
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   // ---- Fetch services from backend ----
   useEffect(() => {
@@ -63,66 +67,89 @@ const ApplyService = () => {
     }
   };
 
+  const handlePaymentSuccess = () => {
+    alert("Payment successful! Redirecting to your history...");
+    setTimeout(() => navigate("/application-history"), 1500);
+  };
+
   return (
-    <div className="min-h-screen bg-blue-500 flex items-center justify-center p-4">
-      <div className="w-full max-w-lg bg-blue-50 p-8 rounded-2xl shadow-lg">
-        <h1 className="text-2xl font-bold text-blue-700 text-center mb-6">Apply for a Service</h1>
+    <div className="min-h-screen bg-gradient-to-br from-blue-100 to-blue-300 flex flex-col">
+      <Navbar />
+      <div className="flex-grow flex items-center justify-center p-6">
+        <div className="w-full max-w-lg bg-white rounded-2xl shadow-xl p-8">
+          <h2 className="text-3xl font-bold text-center text-blue-700 mb-8">
+            Apply for a Government Service
+          </h2>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <div>
-            <label className="block font-semibold text-gray-700 mb-1">Select Service:</label>
-            <select
-              value={serviceId ?? ""}
-              onChange={(e) => setServiceId(e.target.value ? Number(e.target.value) : null)}
-              required
-              className="w-full p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Service Selection */}
+            <div>
+              <label className="block font-semibold text-gray-700 mb-2">
+                Select Service:
+              </label>
+              <select
+                value={serviceId ?? ""}
+                onChange={(e) =>
+                  setServiceId(e.target.value ? Number(e.target.value) : null)
+                }
+                required
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              >
+                <option value="">-- Select a service --</option>
+                {services.length > 0 ? (
+                  services.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name} ({s.department?.name}) - ₹{s.fee}
+                    </option>
+                  ))
+                ) : (
+                  <option disabled>Loading services...</option>
+                )}
+              </select>
+            </div>
+
+            {/* File Upload */}
+            <div>
+              <label className="block font-semibold text-gray-700 mb-2">
+                Upload Required Document(s):
+              </label>
+              <input
+                type="file"
+                multiple
+                onChange={handleFileChange}
+                className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                required
+              />
+              <p className="text-sm text-gray-500 mt-1">
+                * Please upload all the necessary documents before applying.
+              </p>
+            </div>
+
+            {/* Submit Button */}
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-blue-600 text-white font-semibold py-3 rounded-lg hover:bg-blue-700 transition"
             >
-              <option value="">--Select a service--</option>
-              {services.length > 0 ? (
-                services.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.name} ({s.department?.name}) - ₹{s.fee}
-                  </option>
-                ))
-              ) : (
-                <option disabled>Loading services...</option>
-              )}
-            </select>
-          </div>
+              {loading ? "Submitting..." : "Apply for Service"}
+            </button>
+          </form>
 
-          <div>
-            <label className="block font-semibold text-gray-700 mb-1">Upload Document(s):</label>
-            <input
-              type="file"
-              multiple
-              onChange={handleFileChange}
-              className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-              required
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-blue-600 text-white font-semibold py-3 rounded-lg hover:bg-blue-700 transition"
-          >
-            {loading ? "Submitting..." : "Apply"}
-          </button>
-        </form>
-
-        {order?.id && (
-          <div className="mt-6 p-4 bg-blue-100 rounded-lg shadow-inner">
-            <h3 className="text-lg font-semibold text-blue-700 mb-3">Complete your Payment</h3>
-            <RazorpayButton
-              order={order}
-              user={user}
-              onPaymentSuccess={() => {
-                alert("Payment successful!");
-                setOrder(null);
-              }}
-            />
-          </div>
-        )}
+          {/* Razorpay Payment Section */}
+          {order?.id && (
+            <div className="mt-8 p-5 bg-blue-50 border border-blue-200 rounded-xl shadow-inner">
+              <h3 className="text-lg font-semibold text-blue-700 mb-3">
+                Complete Your Payment
+              </h3>
+              <RazorpayButton
+                order={order}
+                user={user}
+                onPaymentSuccess={handlePaymentSuccess}
+                className="bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg w-full text-center"
+              />
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

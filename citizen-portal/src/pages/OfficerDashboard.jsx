@@ -1,9 +1,11 @@
 import React, { useEffect, useState, useContext } from "react";
 import axios from "axios";
 import { AuthContext } from "../context/AuthContext";
+import Navbar from "../components/Navbar";
 
 const backendUrl =
   import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
+
 const OfficerDashboard = ({ refreshTrigger }) => {
   const { user } = useContext(AuthContext);
   const [applications, setApplications] = useState([]);
@@ -12,38 +14,32 @@ const OfficerDashboard = ({ refreshTrigger }) => {
   const [processing, setProcessing] = useState({});
 
   useEffect(() => {
-  const fetchApplications = async () => {
-    try {
-      const res = await axios.get(
-        `${backendUrl}/applications/pending-applications`,
-        { headers: { Authorization: `Bearer ${user.token}` } }
-      );
-      console.log("applications:", res.data);
+    const fetchApplications = async () => {
+      try {
+        const res = await axios.get(
+          `${backendUrl}/applications/pending-applications`,
+          { headers: { Authorization: `Bearer ${user.token}` } }
+        );
 
-      // If officer has no department, show all applications
-      if (user.departmentId == null) {
-        setApplications(res.data);
-        return;
+        if (user.departmentId == null) {
+          setApplications(res.data);
+          return;
+        }
+
+        const filtered = res.data.filter(
+          (app) => app.service?.department?.id === user.departmentId
+        );
+        setApplications(filtered);
+      } catch (err) {
+        console.error(err);
+        alert("Failed to fetch applications");
+      } finally {
+        setLoading(false);
       }
+    };
 
-      // Filter applications by department using the nested service object
-      const filtered = res.data.filter(
-        (app) => app.service?.department?.id === user.departmentId
-      );
-
-      console.log("filtered applications:", filtered);
-      setApplications(filtered);
-    } catch (err) {
-      console.error(err);
-      alert("Failed to fetch applications");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  fetchApplications();
-}, [user, refreshTrigger]);
-
+    fetchApplications();
+  }, [user, refreshTrigger]);
 
   const handleAction = async (id, action) => {
     setProcessing((prev) => ({ ...prev, [id]: true }));
@@ -56,7 +52,6 @@ const OfficerDashboard = ({ refreshTrigger }) => {
 
       alert(`Application ${action}d successfully!`);
       setApplications(applications.filter((app) => app.id !== id));
-
       setRemarks((prev) => {
         const copy = { ...prev };
         delete copy[id];
@@ -81,7 +76,6 @@ const OfficerDashboard = ({ refreshTrigger }) => {
         { remark: remarks[id] },
         { headers: { Authorization: `Bearer ${user.token}` } }
       );
-
       alert("Remark saved successfully!");
     } catch (err) {
       console.error(err);
@@ -92,126 +86,87 @@ const OfficerDashboard = ({ refreshTrigger }) => {
   };
 
   return (
-    <div style={{ padding: "20px" }}>
-      <h1 style={{ color: "#0d47a1" }}>Officer Dashboard</h1>
-      <p>Total Pending Applications: {applications.length}</p>
+    <div className="min-h-screen bg-gradient-to-br from-blue-100 to-blue-300 flex flex-col">
+      <Navbar />
 
-      {loading ? (
-        <p>Loading applications...</p>
-      ) : applications.length === 0 ? (
-        <p>No pending applications for your department.</p>
-      ) : (
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(350px, 1fr))",
-            gap: "25px",
-            marginTop: "20px",
-          }}
-        >
-          {applications.map((app) => (
-            <div
-              key={app.id}
-              style={{
-                border: "1px solid #ccc",
-                borderRadius: "12px",
-                padding: "20px",
-                backgroundColor: "#f9f9ff",
-                boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
-                transition: "transform 0.2s ease",
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.03)")}
-              onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
-            >
-              <h3 style={{ color: "#0d47a1", fontSize: "1.2rem" }}>
-                Service: {app.service?.name}
-              </h3>
-              <p style={{ fontWeight: "bold" }}>
-                Status:{" "}
-                <span
-                  style={{
-                    color:
+      <div className="flex-grow flex flex-col items-center p-6 pt-24">
+        <h1 className="text-3xl font-bold text-blue-700 mb-4 text-center">
+          Officer Dashboard
+        </h1>
+        <p className="text-gray-700 mb-6">Total Pending Applications: {applications.length}</p>
+
+        {loading ? (
+          <p className="text-gray-600 text-center">Loading applications...</p>
+        ) : applications.length === 0 ? (
+          <p className="text-gray-600 text-center">No pending applications for your department.</p>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-6xl">
+            {applications.map((app) => (
+              <div
+                key={app.id}
+                className="bg-white/70 backdrop-blur-xl border border-gray-200 rounded-2xl shadow-xl p-6 hover:scale-[1.02] transition-transform duration-200"
+              >
+                <h3 className="text-xl font-bold text-blue-700 mb-2">
+                  {app.service?.name}
+                </h3>
+                <p className="font-medium">
+                  Status:{" "}
+                  <span
+                    className={
                       app.status === "approved"
-                        ? "green"
+                        ? "text-green-600"
                         : app.status === "rejected"
-                          ? "red"
-                          : "orange",
-                  }}
-                >
-                  {app.status}
-                </span>
-              </p>
+                        ? "text-red-600"
+                        : "text-orange-500"
+                    }
+                  >
+                    {app.status}
+                  </span>
+                </p>
 
-              <label style={{ fontWeight: "500" }}>
-                Remark:
-                <input
-                  type="text"
-                  value={remarks[app.id] || ""}
-                  onChange={(e) =>
-                    setRemarks((prev) => ({
-                      ...prev,
-                      [app.id]: e.target.value,
-                    }))
-                  }
-                  style={{
-                    width: "100%",
-                    marginTop: "5px",
-                    marginBottom: "15px",
-                    border: "1px solid #ccc",
-                    borderRadius: "5px",
-                    padding: "6px",
-                  }}
-                />
-              </label>
+                <label className="font-medium mt-2 block">
+                  Remark:
+                  <input
+                    type="text"
+                    value={remarks[app.id] || ""}
+                    onChange={(e) =>
+                      setRemarks((prev) => ({
+                        ...prev,
+                        [app.id]: e.target.value,
+                      }))
+                    }
+                    className="w-full mt-1 mb-4 p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  />
+                </label>
 
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <button
-                  onClick={() => handleAction(app.id, "approve")}
-                  disabled={processing[app.id]}
-                  style={{
-                    backgroundColor: "#4caf50",
-                    color: "#fff",
-                    border: "none",
-                    borderRadius: "5px",
-                    padding: "6px 12px",
-                    cursor: "pointer",
-                  }}
-                >
-                  Approve
-                </button>
-                <button
-                  onClick={() => handleAction(app.id, "reject")}
-                  disabled={processing[app.id]}
-                  style={{
-                    backgroundColor: "#f44336",
-                    color: "#fff",
-                    border: "none",
-                    borderRadius: "5px",
-                    padding: "6px 12px",
-                    cursor: "pointer",
-                  }}
-                >
-                  Reject
-                </button>
-                <button
-                  onClick={() => handleSaveRemark(app.id)}
-                  disabled={processing[app.id]}
-                  style={{
-                    backgroundColor: "#007bff",
-                    color: "#fff",
-                    border: "none",
-                    borderRadius: "5px",
-                    padding: "6px 12px",
-                    cursor: "pointer",
-                  }}
-                >
-                  Save Remark
-                </button>
+                <div className="flex justify-between gap-2">
+                  <button
+                    onClick={() => handleAction(app.id, "approve")}
+                    disabled={processing[app.id]}
+                    className="flex-1 bg-green-600 text-white font-semibold py-2 rounded-lg hover:bg-green-700 transition"
+                  >
+                    Approve
+                  </button>
+                  <button
+                    onClick={() => handleAction(app.id, "reject")}
+                    disabled={processing[app.id]}
+                    className="flex-1 bg-red-600 text-white font-semibold py-2 rounded-lg hover:bg-red-700 transition"
+                  >
+                    Reject
+                  </button>
+                  <button
+                    onClick={() => handleSaveRemark(app.id)}
+                    disabled={processing[app.id]}
+                    className="flex-1 bg-blue-600 text-white font-semibold py-2 rounded-lg hover:bg-blue-700 transition"
+                  >
+                    Save Remark
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
-      )}
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 };
